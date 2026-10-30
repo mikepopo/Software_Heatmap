@@ -15,13 +15,13 @@
 @media(max-width:540px){.card{padding:20px 8px 12px}.topbar{gap:7px}.picker{height:29px;padding-inline:6px}.picker select{max-width:76px}.stats-row{gap:4px}}
 </style></head>
 <body><main class="card">
-<div class="topbar"><h1>Software学习打卡记录</h1><label class="picker" aria-label="按年份筛选"><select id="year-picker" aria-label="选择年份"></select><span class="calendar-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.5A2.5 2.5 0 0 1 22 6.5v12A2.5 2.5 0 0 1 19.5 21h-15A2.5 2.5 0 0 1 2 18.5v-12A2.5 2.5 0 0 1 4.5 4H6V3a1 1 0 0 1 1-1Zm12.5 8h-15v8.5a.5.5 0 0 0 .5.5h14a.5.5 0 0 0 .5-.5V10ZM5 6a.5.5 0 0 0-.5.5V8h15V6.5A.5.5 0 0 0 19 6H5Z"/></svg></span></label></div>
+<div class="topbar"><h1>Software学习打卡记录</h1><label class="picker" aria-label="按年份筛选"><select id="year-picker" aria-label="选择年份"></select><span class="calendar-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.5A2.5 2.5 0 0 1 22 6.5v12A2.5 2.5 0 0 1 19.5 21h-15A2.5 2.5 0 0 1 2 18.5v-12A2.5 2.5 0 0 1 4.5 4H6V3a1 1 0 0 1 1-1Zm12.5 8h-15v8.5a.5 0 0 0 .5.5h14a.5.5 0 0 0 .5-.5V10ZM5 6a.5.5 0 0 0-.5.5V8h15V6.5A.5.5 0 0 0 19 6H5Z"/></svg></span></label></div>
 <div class="stats-row" aria-live="polite"><span class="stat-item"><span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg></span><span>学习 <strong id="reading-days">0</strong> 天</span></span><span class="separator" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"/></svg></span><span class="stat-item"><span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"></path></svg></span><span>最长连续 <strong id="longest-streak">0</strong> 天</span></span></div>
 <div class="heatmap-wrap" id="heatmap-wrap"><div class="heatmap" id="heatmap" aria-label="年度Software学习热力图"></div></div>
 </main>
 <script>
 /* 由每日打卡维护这两个数组。日期格式 YYYY-MM-DD；更新时必须保留已有日期。 */
-const COMPLETED_DATES = ["2026-10-17", "2026-10-18", "2026-10-19", "2026-10-21", "2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26", "2026-10-27", "2026-10-29"];
+const COMPLETED_DATES = ["2026-10-17", "2026-10-18", "2026-10-19", "2026-10-21", "2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26", "2026-10-27", "2026-10-29", "2026-10-30"];
 const PARTIAL_DATES = [];
 (()=>{
  const CELL=12,GAP=4,LABEL_WIDTH=46,TOP_ROW_HEIGHT=20,FIRST_YEAR=2020,LAST_YEAR=2035;

@@ -49,14 +49,13 @@
 </main>
 <script>
 /* 由每日打卡维护这几个数组。日期格式 YYYY-MM-DD；更新时必须保留已有日期。
-   WORD_DATES：单词完成的日期；WORD_PARTIAL_DATES：单词部分完成的日期；LISTENING_DATES：听力完成的日期。
+   WORD_DATES：单词完成的日期；LISTENING_DATES：听力完成的日期。
    同一天单词和听力都完成，会在「全部」视图里显示成深紫色「双修」。 */
 const WORD_DATES = ["2026-10-11", "2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17", "2026-10-18", "2026-10-19", "2026-10-20", "2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26", "2026-10-27"];
-const WORD_PARTIAL_DATES = [];
 const LISTENING_DATES = ["2026-10-12", "2026-10-13", "2026-10-14", "2026-10-16", "2026-10-17", "2026-10-18", "2026-10-19", "2026-10-20", "2026-10-21", "2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26", "2026-10-27"];
 (()=>{
  const CELL=12,GAP=4,LABEL_WIDTH=46,TOP_ROW_HEIGHT=20,FIRST_YEAR=2020,LAST_YEAR=2035;
- const done=new Set(WORD_DATES),partial=new Set(WORD_PARTIAL_DATES),prac=new Set(LISTENING_DATES),$=id=>document.getElementById(id);
+ const done=new Set(WORD_DATES),partial=new Set(),prac=new Set(LISTENING_DATES),$=id=>document.getElementById(id);
  const pad=n=>String(n).padStart(2,'0'),toISO=d=>d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate());
  const dayIndex=d=>(d.getUTCDay()+6)%7,utcDate=(y,m,d)=>new Date(Date.UTC(y,m,d)),now=new Date(),currentYear=now.getFullYear();
  const ICON={

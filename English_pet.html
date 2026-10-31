@@ -150,7 +150,7 @@ body{color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","P
 .still .fx i{opacity:.8;transform:translateY(var(--y))}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important}}
 @media(max-width:680px){.lines{gap:7px}.card{padding:10px 9px}.tag,.bk-tag{font-size:10px;padding:1px 5px}.tag b,.bk-tag b{font-size:11px}.back{padding:8px 8px}.row1{gap:4px}.row1 b{font-size:13.5px}.next{font-size:11px}}
-@media(max-width:560px){:root{--k:.55;--ch:88px}.back{justify-content:space-between}.lines{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.card{padding:9px 8px}.top{margin-bottom:8px}.tag{top:4px;left:4px}.hab .turn{right:4px;bottom:4px;width:16px;height:16px;font-size:11px}.back{padding:6px 8px 7px}.back .row1,.xp,.next{margin-top:0!important}.row1 b{font-size:13px}.xp{margin-top:4px;gap:2px}.xp i{height:5px}.next{font-size:10px;margin-top:3px}.chain{display:none}.toast{font-size:10px}}
+@media(max-width:560px){:root{--k:.58;--ch:112px}.back{justify-content:space-between}.lines{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.card{padding:9px 8px}.top{margin-bottom:8px}.tag{top:4px;left:4px}.hab .turn{right:4px;bottom:4px;width:16px;height:16px;font-size:11px}.back{padding:6px 8px 7px}.back .row1,.xp,.next{margin-top:0!important}.row1 b{font-size:13px}.xp{margin-top:4px;gap:2px}.xp i{height:5px}.next{font-size:10px;margin-top:3px}.chain{grid-template-columns:repeat(8,minmax(0,1fr));gap:2px;max-width:none;padding-top:4px}.th{border-radius:4px}.th .img{inset:1px}.toast{font-size:10px}}
 @media(max-width:360px){.week .lb,.yr{display:none}.week{gap:4px}.dot{width:19px;height:19px}}
 </style>
 <style id="art">
@@ -366,7 +366,7 @@ async function getDates() {
   try {
     const h = await fetch(HEATMAP_FILE + "?t=" + Date.now()).then(r => r.text());
     const grab = name => { try { const m = h.match(new RegExp(name + "\\s*=\\s*(\\[[\\s\\S]*?\\])")); return m ? JSON.parse(m[1].replace(/\/\/.*$/gm, "").replace(/'/g, '"').replace(/,\s*\]/, "]")) : []; } catch (e) { return []; } };
-    return { done: grab("WORD_DATES"), part: grab("WORD_PARTIAL_DATES"), practice: grab("LISTENING_DATES") };
+    return { done: grab("WORD_DATES"), part: [], practice: grab("LISTENING_DATES") };
   } catch (e) {}
   return { done: [], part: [], practice: [] };
 }

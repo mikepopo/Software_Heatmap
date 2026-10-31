@@ -198,6 +198,7 @@ body{color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","P
 /* ================= 只需要改这里 =================
    🔥 累计学习 / 💧 累计练习：自动读取同一文件夹里 index.html（热力图）的 COMPLETED_DATES 和 PRACTICE_DATES，
       只需在 index.html 里打卡，这里不用重复填写。按自然年统计，每年 1 月 1 日重新孵化，一年最多算 300 天。
+   ✅ 本周打卡：双修才打卡 —— 同一天学习和练习都完成，这一天才算打卡（深色圆点）；只完成一项显示浅色。
    🌿 已学完 / ⚡ 已掌握：学完一门，就把课程名加进 FINISHED_COURSES；真正掌握了，再加进 MASTERED_COURSES。 */
 const FINISHED_COURSES = ["NumPy"];
 const MASTERED_COURSES = [];
@@ -370,25 +371,27 @@ async function getDates() {
   try {
     const h = await fetch(HEATMAP_FILE + "?t=" + Date.now()).then(r => r.text());
     const grab = name => { try { const m = h.match(new RegExp(name + "\\s*=\\s*(\\[[\\s\\S]*?\\])")); return m ? JSON.parse(m[1].replace(/\/\/.*$/gm, "").replace(/'/g, '"').replace(/,\s*\]/, "]")) : []; } catch (e) { return []; } };
-    return { done: grab("COMPLETED_DATES"), part: grab("PARTIAL_DATES"), practice: grab("PRACTICE_DATES") };
+    return { done: grab("COMPLETED_DATES"), practice: grab("PRACTICE_DATES") };
   } catch (e) {}
-  return { done: [], part: [], practice: [] };
+  return { done: [], practice: [] };
 }
 
 (async () => {
-  const { done, part, practice: extra } = await getDates();
+  const { done, practice: extra } = await getDates();
   const practiceDates = extra;
   const Y = today.getFullYear(), T = ymd(today);
   const yearCount = arr => Math.min(MAX_DAYS, new Set(arr.map(String).filter(d => d.slice(0, 4) === String(Y) && d <= T)).size);
-  const set = new Set(done), pset = new Set(part), prset = new Set(practiceDates);
+  const set = new Set(done), prset = new Set(practiceDates);
   const mon = addDays(today, -((today.getDay() + 6) % 7)); let n = 0;
+  // 双修才打卡：同一天学习和练习都完成，才算这一天打卡；只完成其中一项显示为半完成
   const dots = "一二三四五六日".split("").map((w, i) => {
-    const d = addDays(mon, i), k = ymd(d), on = set.has(k), now = +d === +today; if (on) n++;
-    const cls = ["dot", on ? "on" : pset.has(k) ? "part" : "", d > today ? "future" : "", now ? "now" : ""].join(" ");
-    const tip = [on ? "✓ 已学习" : "", prset.has(k) ? "✓ 已练习" : ""].filter(Boolean).join(" · ");
-    return `<span class="${cls}" style="--i:${i}" title="周${w} ${k}${tip ? " " + tip : ""}">${w}</span>`;
+    const d = addDays(mon, i), k = ymd(d), study = set.has(k), prac = prset.has(k), both = study && prac;
+    const now = +d === +today; if (both) n++;
+    const cls = ["dot", both ? "on" : study || prac ? "part" : "", d > today ? "future" : "", now ? "now" : ""].join(" ");
+    const tip = both ? "✓ 双修打卡" : study ? "✓ 已学习 · 还差练习" : prac ? "✓ 已练习 · 还差学习" : "未打卡";
+    return `<span class="${cls}" style="--i:${i}" title="周${w} ${k} ${tip}">${w}</span>`;
   }).join("");
-  $("week").innerHTML = `<span class="lb">本周学习 <b>${n}</b>/7</span>${dots}`;
+  $("week").innerHTML = `<span class="lb" title="学习 + 练习同一天都完成才算打卡（双修）">本周打卡 <b>${n}</b>/7</span>${dots}`;
   $("yr").textContent = `${Y} 年度`;
   $("yr").title = `累计学习、累计练习按自然年统计：每年 1 月 1 日清零重新孵化，一年最多 ${MAX_DAYS} 天。课程数不清零。`;
   const v = { study: yearCount(done), finished: new Set(FINISHED_COURSES).size, practice: yearCount(practiceDates), mastered: new Set(MASTERED_COURSES).size };

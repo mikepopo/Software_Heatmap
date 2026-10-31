@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Software打卡记录</title>
+<style>
+:root{color-scheme:light dark;--ink:#2f3d52;--strong:#273245;--muted:#91a0b6;--line:#dce4ef;--surface:rgba(255,255,255,.96);--picker:#f2f5f9;--seg-on:#fff;--today:#243244;--empty-cell:#eef2f6;--cell:12px;--gap:4px;
+ /* 全部视图：学习、练习是相近的浅色，两样都完成是深绿 */
+ --c-s:#74a8ef;--c-p:#c9ddfb;--c-b:#1f4fae;--c-h:#a9c6f3;
+ /* 单项视图 */
+ --v-s:#1f4fae;--v-h:#a9c6f3;--v-p:#74a8ef}
+@media(prefers-color-scheme:dark){:root{--ink:#d8dee9;--strong:#f2f5f8;--muted:#9aa7ba;--line:#354255;--surface:rgba(24,29,37,.96);--picker:#273142;--seg-on:#3a465a;--today:#f2f5f8;--empty-cell:#293344;
+ --c-s:#3f72c4;--c-p:#2a3f66;--c-b:#8ab8ff;--c-h:#2f4f80;--v-s:#8ab8ff;--v-h:#3f72c4;--v-p:#5f95e8}}
+*{box-sizing:border-box}html,body{margin:0;padding:0;width:100%;max-width:100%;min-height:0;background:transparent;overflow:hidden}body{color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+.card{width:100%;margin:0;background:var(--surface);border:1px solid var(--line);border-radius:9px;box-shadow:0 1px 2px rgba(31,45,61,.04);padding:20px 12px 14px;overflow:hidden;container-type:inline-size}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;width:100%}h1{margin:0;font-size:clamp(18px,2.4cqw,25px);line-height:1.15;letter-spacing:0;color:var(--strong);font-weight:750}
+.tools{display:flex;align-items:center;gap:8px;margin-left:auto}
+.seg{position:relative;display:inline-flex;align-items:center;height:32px;padding:3px;border-radius:8px;background:var(--picker)}
+.seg button{position:relative;z-index:1;appearance:none;border:0;background:transparent;height:26px;padding:0 10px;border-radius:6px;font:inherit;font-size:clamp(11px,1.25cqw,13px);font-weight:600;color:var(--muted);cursor:pointer;transition:color .25s}
+.seg button.on{color:var(--strong)}
+.seg .thumb{position:absolute;top:3px;left:0;height:26px;border-radius:6px;background:var(--seg-on);box-shadow:0 1px 3px rgba(31,45,61,.14);transition:transform .32s cubic-bezier(.3,1.25,.5,1),width .32s}
+.picker{position:relative;display:inline-flex;flex:0 0 auto;align-items:center;gap:6px;height:32px;padding:0 9px 0 10px;border-radius:8px;background:var(--picker);border:1px solid transparent;color:var(--muted)}.picker:focus-within{border-color:#cbd6e4;box-shadow:0 0 0 2px rgba(143,160,184,.16)}.picker select{appearance:none;-webkit-appearance:none;border:0;outline:0;background:transparent;color:var(--muted);font-size:clamp(11px,1.25cqw,13px);font-weight:600;cursor:pointer;padding:0 13px 0 0;max-width:100px}.picker select option{color:var(--strong)}.calendar-icon{width:16px;height:16px;color:var(--strong);pointer-events:none;flex:0 0 auto}.calendar-icon svg{width:16px;height:16px;fill:currentColor;display:block}
+.stats-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:9px;min-height:18px;font-size:clamp(11px,1.35cqw,14px);line-height:1.25;color:var(--ink);font-variant-numeric:tabular-nums}.stat-item{display:inline-flex;align-items:center;gap:5px;font-weight:400;color:var(--strong);white-space:nowrap;animation:fadein .35s both}.stat-icon{width:16px;height:16px;color:currentColor;flex:0 0 auto}.stat-icon svg{width:16px;height:16px;display:block;stroke:currentColor;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}.separator{display:inline-flex;align-items:center;justify-content:center;width:12px;height:16px;color:var(--muted);opacity:.85;flex:0 0 auto}.separator svg{width:12px;height:12px;display:block;fill:currentColor}
+.legend{display:inline-flex;align-items:center;gap:9px;margin-left:auto;font-size:clamp(10.5px,1.2cqw,12.5px);color:var(--muted);white-space:nowrap}
+.lg{display:inline-flex;align-items:center;gap:4px;cursor:default;padding:1px 3px;border-radius:4px;transition:color .2s,background .2s}.lg:hover{color:var(--strong);background:var(--picker)}
+.lg i{width:10px;height:10px;border-radius:2.5px;display:inline-block}
+.heatmap-wrap{margin-top:17px;width:100%;overflow:hidden;--scale:calc(100cqw / var(--grid-width));height:calc(var(--base-height) * var(--scale))}.heatmap{display:grid;grid-template-columns:46px repeat(var(--week-count),var(--cell));grid-template-rows:20px repeat(7,var(--cell));gap:var(--gap);width:var(--grid-width);transform:scale(var(--scale));transform-origin:top left;align-items:center}.month-label{color:var(--ink);font-size:13px;text-align:left;white-space:nowrap;align-self:end;line-height:1.1}.weekday{color:var(--ink);font-size:13px;text-align:right;padding-right:7px;white-space:nowrap;line-height:1}
+.day-cell{width:var(--cell);height:var(--cell);border-radius:3px;background-color:var(--empty-cell);box-shadow:inset 0 0 0 1px rgba(47,61,82,.04);transition:background-color .38s ease var(--d,0s),opacity .22s ease}
+.day-cell.is-today{outline:2px solid var(--today);outline-offset:1px}
+/* 全部 */
+.v-all .f-h{background-color:var(--c-h)}.v-all .f-p{background-color:var(--c-p)}.v-all .f-s{background-color:var(--c-s)}.v-all .f-s.f-p{background-color:var(--c-b)}
+/* 只看学习 / 只看练习 */
+.v-study .f-h{background-color:var(--v-h)}.v-study .f-s{background-color:var(--v-s)}
+.v-practice .f-p{background-color:var(--v-p)}
+/* 悬停图例：只突出对应的日子 */
+.dim-s .day-cell:not(.f-s),.dim-h .day-cell:not(.f-h),.dim-p .day-cell:not(.f-p),.dim-b .day-cell:not(.f-s),.dim-b .day-cell:not(.f-p){opacity:.2}
+/* 打开时按日期顺序回放 */
+.day-cell.pop{animation:cellin .42s cubic-bezier(.3,1.5,.5,1) both;animation-delay:var(--r,0s)}
+@keyframes cellin{0%{transform:scale(.2);opacity:0}100%{transform:none;opacity:1}}
+@keyframes fadein{from{opacity:0;transform:translateY(3px)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:540px){.card{padding:20px 8px 12px}.topbar{gap:7px}.picker{height:29px;padding-inline:6px}.picker select{max-width:76px}.seg{height:29px}.seg button{height:23px;padding:0 7px}.seg .thumb{height:23px}.stats-row{gap:4px}.legend{gap:5px}}
+#ttl.swap{animation:ttl .35s ease both}@keyframes ttl{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+</style></head>
+<body><main class="card">
+<div class="topbar"><h1 id="ttl">Software打卡记录</h1><div class="tools"><div class="seg" id="seg" role="tablist" aria-label="显示内容"><span class="thumb" id="thumb"></span><button data-v="all" role="tab">全部</button><button data-v="study" role="tab">学习</button><button data-v="practice" role="tab">练习</button></div><label class="picker" aria-label="按年份筛选"><select id="year-picker" aria-label="选择年份"></select><span class="calendar-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.5A2.5 2.5 0 0 1 22 6.5v12A2.5 2.5 0 0 1 19.5 21h-15A2.5 2.5 0 0 1 2 18.5v-12A2.5 2.5 0 0 1 4.5 4H6V3a1 1 0 0 1 1-1Zm12.5 8h-15v8.5a.5.5 0 0 0 .5.5h14a.5.5 0 0 0 .5-.5V10ZM5 6a.5.5 0 0 0-.5.5V8h15V6.5A.5.5 0 0 0 19 6H5Z"/></svg></span></label></div></div>
+<div class="stats-row" id="stats" aria-live="polite"></div>
+<div class="heatmap-wrap" id="heatmap-wrap"><div class="heatmap" id="heatmap" aria-label="年度Software学习热力图"></div></div>
+</main>
+<script>
+/* 由每日打卡维护这几个数组。日期格式 YYYY-MM-DD；更新时必须保留已有日期。
+   COMPLETED_DATES：学习完成的日期；PARTIAL_DATES：学习部分完成的日期；PRACTICE_DATES：练习完成的日期。
+   同一天学习和练习都完成，会在「全部」视图里显示成深蓝色「双修」。 */
+const COMPLETED_DATES = ["2026-10-17", "2026-10-18", "2026-10-19", "2026-10-21", "2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26", "2026-10-27", "2026-10-29", "2026-10-30"];
+const PARTIAL_DATES = [];
+const PRACTICE_DATES = ["2026-10-09", "2026-10-10", "2026-10-11", "2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17", "2026-10-18", "2026-10-19", "2026-10-20", "2026-10-21", "2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26", "2026-10-27", "2026-10-28", "2026-10-29"];
+(()=>{
+ const CELL=12,GAP=4,LABEL_WIDTH=46,TOP_ROW_HEIGHT=20,FIRST_YEAR=2020,LAST_YEAR=2035;
+ const done=new Set(COMPLETED_DATES),partial=new Set(PARTIAL_DATES),prac=new Set(PRACTICE_DATES),$=id=>document.getElementById(id);
+ const pad=n=>String(n).padStart(2,'0'),toISO=d=>d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate());
+ const dayIndex=d=>(d.getUTCDay()+6)%7,utcDate=(y,m,d)=>new Date(Date.UTC(y,m,d)),now=new Date(),currentYear=now.getFullYear();
+ const ICON={
+  study:'<path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path>',
+  practice:'<path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>',
+  both:'<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"></path><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8Z"></path>',
+  fire:'<path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"></path>'};
+ const SEP='<span class="separator" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"/></svg></span>';
+ const q=new URLSearchParams(location.search);
+ let view=q.get('view')||(()=>{try{return localStorage.getItem('hm-view')}catch(e){return null}})()||'all';
+ if(!['all','study','practice'].includes(view))view='all';
+ let year=currentYear,S={};
+ for(let y=LAST_YEAR;y>=FIRST_YEAR;y--){const o=document.createElement('option');o.value=String(y);o.textContent=y+' 年';if(y===currentYear)o.selected=true;$('year-picker').appendChild(o)}
+ if(currentYear<FIRST_YEAR||currentYear>LAST_YEAR){const o=document.createElement('option');o.value=String(currentYear);o.textContent=currentYear+' 年';o.selected=true;$('year-picker').appendChild(o)}
+
+ function streakOf(set,y){let best=0,run=0;for(let d=utcDate(y,0,1);d<=utcDate(y,11,31);d.setUTCDate(d.getUTCDate()+1)){if(set.has(toISO(d))){run++;best=Math.max(best,run)}else run=0}return best}
+ function stats(y){let s=0,p=0,b=0,h=0;for(let d=utcDate(y,0,1);d<=utcDate(y,11,31);d.setUTCDate(d.getUTCDate()+1)){const k=toISO(d),a=done.has(k),c=prac.has(k);if(a)s++;if(c)p++;if(a&&c)b++;if(!a&&partial.has(k))h++}
+  return{s,p,b,h,ls:streakOf(done,y),lp:streakOf(prac,y)}}
+
+ function renderYear(y,replay){
+  year=y;S=stats(y);
+  const jan1=utcDate(y,0,1),first=utcDate(y,0,1-dayIndex(jan1)),dec31=utcDate(y,11,31),last=utcDate(y,11,31+(6-dayIndex(dec31)));
+  const weeks=Math.round((last-first)/604800000)+1,gridWidth=LABEL_WIDTH+weeks*(CELL+GAP),gridHeight=TOP_ROW_HEIGHT+7*(CELL+GAP),map=$('heatmap');map.innerHTML='';
+  [['--week-count',weeks],['--cell',CELL+'px'],['--gap',GAP+'px'],['--grid-width',gridWidth+'px'],['--base-height',gridHeight+'px']].forEach(([k,v])=>map.style.setProperty(k,String(v)));
+  $('heatmap-wrap').style.setProperty('--grid-width',gridWidth+'px');$('heatmap-wrap').style.setProperty('--base-height',gridHeight+'px');map.setAttribute('aria-label',y+' 年Software学习热力图');
+  for(let month=0;month<12;month++){const date=utcDate(y,month,1),week=Math.floor((date-first)/604800000),label=document.createElement('div');label.className='month-label';label.textContent=(month+1)+'月';label.style.gridColumn=String(week+2);label.style.gridRow='1';map.appendChild(label)}
+  [['周一',2],['周三',4],['周五',6]].forEach(([text,row])=>{const label=document.createElement('div');label.className='weekday';label.textContent=text;label.style.gridColumn='1';label.style.gridRow=String(row);map.appendChild(label)});
+  const today=toISO(utcDate(now.getFullYear(),now.getMonth(),now.getDate()));
+  for(let i=0;i<weeks*7;i++){const date=new Date(first);date.setUTCDate(first.getUTCDate()+i);const key=toISO(date),week=Math.floor(i/7),row=dayIndex(date)+2,inYear=date.getUTCFullYear()===y,cell=document.createElement('div');
+   cell.className='day-cell';cell.style.gridColumn=String(week+2);cell.style.gridRow=String(row);cell.style.setProperty('--d',(week*9)+'ms');
+   if(!inYear){cell.title=key;cell.setAttribute('aria-label',key+'（年度外）')}else{
+    const a=done.has(key),h=!a&&partial.has(key),p=prac.has(key);
+    if(a)cell.classList.add('f-s');if(h)cell.classList.add('f-h');if(p)cell.classList.add('f-p');
+    if((a||h||p)&&replay){cell.classList.add('pop');cell.style.setProperty('--r',(i/(weeks*7)*0.9).toFixed(3)+'s')}
+    const tip=[a?'✓ 学习':h?'◐ 学习部分完成':'',p?'✓ 练习':''].filter(Boolean);
+    cell.title=key+(tip.length?' · '+tip.join(' · ')+(a&&p?' · 双修':''):' · 未打卡');cell.setAttribute('aria-label',cell.title)}
+   if(key===today)cell.classList.add('is-today');map.appendChild(cell)}
+  applyView(false);
+ }
+
+ const shown={};
+ function countTo(el,to){const from=+el.dataset.v||0;el.dataset.v=to;if(from===to){el.textContent=to;return}const t0=performance.now(),dur=450;
+  const step=t=>{const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=Math.round(from+(to-from)*e);if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step)}
+ function item(icon,label,key,val){return `<span class="stat-item"><span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${ICON[icon]}</svg></span><span>${label} <strong data-k="${key}">${shown[key]??0}</strong> 天</span></span>`}
+ function lg(color,label,dim){return `<span class="lg" data-dim="${dim}"><i style="background:var(${color})"></i>${label}</span>`}
+ function applyView(animate){
+  {const T={all:'Software打卡记录',study:'Software学习记录',practice:'Software练习记录'}[view],h=$('ttl');if(h.textContent!==T){h.textContent=T;h.classList.remove('swap');void h.offsetWidth;h.classList.add('swap')}document.title=T}
+  const map=$('heatmap');map.classList.remove('v-all','v-study','v-practice');map.classList.add('v-'+view);
+  document.querySelectorAll('#seg button').forEach(b=>{b.classList.toggle('on',b.dataset.v===view);b.setAttribute('aria-selected',b.dataset.v===view)});
+  const on=document.querySelector('#seg button.on'),th=$('thumb');th.style.width=on.offsetWidth+'px';th.style.transform=`translateX(${on.offsetLeft}px)`;
+  let html,vals;
+  if(view==='all'){html=item('study','学习','s')+SEP+item('practice','练习','p')+SEP+item('both','双修','b')+`<span class="legend">${lg('--c-s','学习','s')}${lg('--c-p','练习','p')}${lg('--c-b','双修','b')}</span>`;vals={s:S.s,p:S.p,b:S.b}}
+  else if(view==='study'){html=item('study','学习','s')+SEP+item('fire','最长连续','ls')+`<span class="legend">${lg('--v-s','已完成','s')}${S.h?lg('--v-h','部分完成','h'):''}</span>`;vals={s:S.s,ls:S.ls}}
+  else{html=item('practice','练习','p')+SEP+item('fire','最长连续','lp')+`<span class="legend">${lg('--v-p','已练习','p')}</span>`;vals={p:S.p,lp:S.lp}}
+  $('stats').innerHTML=html;
+  $('stats').querySelectorAll('strong[data-k]').forEach(el=>{const k=el.dataset.k;el.dataset.v=shown[k]??0;countTo(el,vals[k]);shown[k]=vals[k]});
+  $('stats').querySelectorAll('.lg').forEach(l=>{l.addEventListener('mouseenter',()=>map.classList.add('dim-'+l.dataset.dim));l.addEventListener('mouseleave',()=>map.classList.remove('dim-'+l.dataset.dim))});
+ }
+ $('seg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.dataset.v===view)return;view=b.dataset.v;try{localStorage.setItem('hm-view',view)}catch(e){}
+  $('heatmap').querySelectorAll('.pop').forEach(c=>c.classList.remove('pop'));applyView(true)});
+ $('year-picker').addEventListener('change',e=>renderYear(Number(e.target.value),true));
+ renderYear(Number($('year-picker').value||currentYear),!q.has('still'));
+ addEventListener('resize',()=>{const on=document.querySelector('#seg button.on'),th=$('thumb');if(on){th.style.width=on.offsetWidth+'px';th.style.transform=`translateX(${on.offsetLeft}px)`}});
+})();
+</script></body></html>

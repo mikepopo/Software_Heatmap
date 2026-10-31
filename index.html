@@ -6,11 +6,11 @@
 <style>
 :root{color-scheme:light dark;--ink:#2f3d52;--strong:#273245;--muted:#91a0b6;--line:#dce4ef;--surface:rgba(255,255,255,.96);--picker:#f2f5f9;--seg-on:#fff;--today:#243244;--empty-cell:#eef2f6;--cell:12px;--gap:4px;
  /* 全部视图：学习、练习是相近的浅色，两样都完成是深绿 */
- --c-s:#74a8ef;--c-p:#c9ddfb;--c-b:#1f4fae;--c-h:#a9c6f3;
+ --c-s:#74a8ef;--c-p:#c9ddfb;--c-b:#1f4fae;
  /* 单项视图 */
- --v-s:#1f4fae;--v-h:#a9c6f3;--v-p:#74a8ef}
+ --v-s:#1f4fae;--v-p:#74a8ef}
 @media(prefers-color-scheme:dark){:root{--ink:#d8dee9;--strong:#f2f5f8;--muted:#9aa7ba;--line:#354255;--surface:rgba(24,29,37,.96);--picker:#273142;--seg-on:#3a465a;--today:#f2f5f8;--empty-cell:#293344;
- --c-s:#3f72c4;--c-p:#2a3f66;--c-b:#8ab8ff;--c-h:#2f4f80;--v-s:#8ab8ff;--v-h:#3f72c4;--v-p:#5f95e8}}
+ --c-s:#3f72c4;--c-p:#2a3f66;--c-b:#8ab8ff;--v-s:#8ab8ff;--v-p:#5f95e8}}
 *{box-sizing:border-box}html,body{margin:0;padding:0;width:100%;max-width:100%;min-height:0;background:transparent;overflow:hidden}body{color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
 .card{width:100%;margin:0;background:var(--surface);border:1px solid var(--line);border-radius:9px;box-shadow:0 1px 2px rgba(31,45,61,.04);padding:20px 12px 14px;overflow:hidden;container-type:inline-size}
 .topbar{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;width:100%}h1{margin:0;font-size:clamp(18px,2.4cqw,25px);line-height:1.15;letter-spacing:0;color:var(--strong);font-weight:750}
@@ -28,12 +28,12 @@
 .day-cell{width:var(--cell);height:var(--cell);border-radius:3px;background-color:var(--empty-cell);box-shadow:inset 0 0 0 1px rgba(47,61,82,.04);transition:background-color .38s ease var(--d,0s),opacity .22s ease}
 .day-cell.is-today{outline:2px solid var(--today);outline-offset:1px}
 /* 全部 */
-.v-all .f-h{background-color:var(--c-h)}.v-all .f-p{background-color:var(--c-p)}.v-all .f-s{background-color:var(--c-s)}.v-all .f-s.f-p{background-color:var(--c-b)}
+.v-all .f-p{background-color:var(--c-p)}.v-all .f-s{background-color:var(--c-s)}.v-all .f-s.f-p{background-color:var(--c-b)}
 /* 只看学习 / 只看练习 */
-.v-study .f-h{background-color:var(--v-h)}.v-study .f-s{background-color:var(--v-s)}
+.v-study .f-s{background-color:var(--v-s)}
 .v-practice .f-p{background-color:var(--v-p)}
 /* 悬停图例：只突出对应的日子 */
-.dim-s .day-cell:not(.f-s),.dim-h .day-cell:not(.f-h),.dim-p .day-cell:not(.f-p),.dim-b .day-cell:not(.f-s),.dim-b .day-cell:not(.f-p){opacity:.2}
+.dim-s .day-cell:not(.f-s),.dim-p .day-cell:not(.f-p),.dim-b .day-cell:not(.f-s),.dim-b .day-cell:not(.f-p){opacity:.2}
 /* 打开时按日期顺序回放 */
 .day-cell.pop{animation:cellin .42s cubic-bezier(.3,1.5,.5,1) both;animation-delay:var(--r,0s)}
 @keyframes cellin{0%{transform:scale(.2);opacity:0}100%{transform:none;opacity:1}}
@@ -43,20 +43,19 @@
 #ttl.swap{animation:ttl .35s ease both}@keyframes ttl{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 </style></head>
 <body><main class="card">
-<div class="topbar"><h1 id="ttl">Software打卡记录</h1><div class="tools"><div class="seg" id="seg" role="tablist" aria-label="显示内容"><span class="thumb" id="thumb"></span><button data-v="all" role="tab">全部</button><button data-v="study" role="tab">学习</button><button data-v="practice" role="tab">练习</button></div><label class="picker" aria-label="按年份筛选"><select id="year-picker" aria-label="选择年份"></select><span class="calendar-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.5A2.5 2.5 0 0 1 22 6.5v12A2.5 2.5 0 0 1 19.5 21h-15A2.5 2.5 0 0 1 2 18.5v-12A2.5 2.5 0 0 1 4.5 4H6V3a1 1 0 0 1 1-1Zm12.5 8h-15v8.5a.5.5 0 0 0 .5.5h14a.5.5 0 0 0 .5-.5V10ZM5 6a.5.5 0 0 0-.5.5V8h15V6.5A.5.5 0 0 0 19 6H5Z"/></svg></span></label></div></div>
+<div class="topbar"><h1 id="ttl">Software打卡记录</h1><div class="tools"><div class="seg" id="seg" role="tablist" aria-label="显示内容"><span class="thumb" id="thumb"></span><button data-v="all" role="tab">全部</button><button data-v="study" role="tab">学习</button><button data-v="practice" role="tab">练习</button></div><label class="picker" aria-label="按年份筛选"><select id="year-picker" aria-label="选择年份"></select><span class="calendar-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.5A2.5 2.5 0 0 1 22 6.5v12A2.5 2.5 0 0 1 19.5 21h-15A2.5 2.5 0 0 1 2 18.5v-12A2.5 2.5 0 0 1 4.5 4H6V3a1 1 0 0 1 1-1Zm12.5 8h-15v8.5a.5 0 0 0 .5.5h14a.5.5 0 0 0 .5-.5V10ZM5 6a.5.5 0 0 0-.5.5V8h15V6.5A.5.5 0 0 0 19 6H5Z"/></svg></span></label></div></div>
 <div class="stats-row" id="stats" aria-live="polite"></div>
 <div class="heatmap-wrap" id="heatmap-wrap"><div class="heatmap" id="heatmap" aria-label="年度Software学习热力图"></div></div>
 </main>
 <script>
-/* 由每日打卡维护这几个数组。日期格式 YYYY-MM-DD；更新时必须保留已有日期。
-   COMPLETED_DATES：学习完成的日期；PARTIAL_DATES：学习部分完成的日期；PRACTICE_DATES：练习完成的日期。
+/* 由每日打卡维护这两个数组。日期格式 YYYY-MM-DD；更新时必须保留已有日期。
+   COMPLETED_DATES：学习完成的日期；PRACTICE_DATES：练习完成的日期。
    同一天学习和练习都完成，会在「全部」视图里显示成深蓝色「双修」。 */
 const COMPLETED_DATES = ["2026-10-17", "2026-10-18", "2026-10-19", "2026-10-21", "2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26", "2026-10-27", "2026-10-29", "2026-10-30"];
-const PARTIAL_DATES = [];
 const PRACTICE_DATES = ["2026-10-09", "2026-10-10", "2026-10-11", "2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17", "2026-10-18", "2026-10-19", "2026-10-20", "2026-10-21", "2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26", "2026-10-27", "2026-10-28", "2026-10-29"];
 (()=>{
  const CELL=12,GAP=4,LABEL_WIDTH=46,TOP_ROW_HEIGHT=20,FIRST_YEAR=2020,LAST_YEAR=2035;
- const done=new Set(COMPLETED_DATES),partial=new Set(PARTIAL_DATES),prac=new Set(PRACTICE_DATES),$=id=>document.getElementById(id);
+ const done=new Set(COMPLETED_DATES),prac=new Set(PRACTICE_DATES),$=id=>document.getElementById(id);
  const pad=n=>String(n).padStart(2,'0'),toISO=d=>d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate());
  const dayIndex=d=>(d.getUTCDay()+6)%7,utcDate=(y,m,d)=>new Date(Date.UTC(y,m,d)),now=new Date(),currentYear=now.getFullYear();
  const ICON={
@@ -73,8 +72,8 @@ const PRACTICE_DATES = ["2026-10-09", "2026-10-10", "2026-10-11", "2026-10-12", 
  if(currentYear<FIRST_YEAR||currentYear>LAST_YEAR){const o=document.createElement('option');o.value=String(currentYear);o.textContent=currentYear+' 年';o.selected=true;$('year-picker').appendChild(o)}
 
  function streakOf(set,y){let best=0,run=0;for(let d=utcDate(y,0,1);d<=utcDate(y,11,31);d.setUTCDate(d.getUTCDate()+1)){if(set.has(toISO(d))){run++;best=Math.max(best,run)}else run=0}return best}
- function stats(y){let s=0,p=0,b=0,h=0;for(let d=utcDate(y,0,1);d<=utcDate(y,11,31);d.setUTCDate(d.getUTCDate()+1)){const k=toISO(d),a=done.has(k),c=prac.has(k);if(a)s++;if(c)p++;if(a&&c)b++;if(!a&&partial.has(k))h++}
-  return{s,p,b,h,ls:streakOf(done,y),lp:streakOf(prac,y)}}
+ function stats(y){let s=0,p=0,b=0;for(let d=utcDate(y,0,1);d<=utcDate(y,11,31);d.setUTCDate(d.getUTCDate()+1)){const k=toISO(d),a=done.has(k),c=prac.has(k);if(a)s++;if(c)p++;if(a&&c)b++}
+  return{s,p,b,ls:streakOf(done,y),lp:streakOf(prac,y)}}
 
  function renderYear(y,replay){
   year=y;S=stats(y);
@@ -88,10 +87,10 @@ const PRACTICE_DATES = ["2026-10-09", "2026-10-10", "2026-10-11", "2026-10-12", 
   for(let i=0;i<weeks*7;i++){const date=new Date(first);date.setUTCDate(first.getUTCDate()+i);const key=toISO(date),week=Math.floor(i/7),row=dayIndex(date)+2,inYear=date.getUTCFullYear()===y,cell=document.createElement('div');
    cell.className='day-cell';cell.style.gridColumn=String(week+2);cell.style.gridRow=String(row);cell.style.setProperty('--d',(week*9)+'ms');
    if(!inYear){cell.title=key;cell.setAttribute('aria-label',key+'（年度外）')}else{
-    const a=done.has(key),h=!a&&partial.has(key),p=prac.has(key);
-    if(a)cell.classList.add('f-s');if(h)cell.classList.add('f-h');if(p)cell.classList.add('f-p');
-    if((a||h||p)&&replay){cell.classList.add('pop');cell.style.setProperty('--r',(i/(weeks*7)*0.9).toFixed(3)+'s')}
-    const tip=[a?'✓ 学习':h?'◐ 学习部分完成':'',p?'✓ 练习':''].filter(Boolean);
+    const a=done.has(key),p=prac.has(key);
+    if(a)cell.classList.add('f-s');if(p)cell.classList.add('f-p');
+    if((a||p)&&replay){cell.classList.add('pop');cell.style.setProperty('--r',(i/(weeks*7)*0.9).toFixed(3)+'s')}
+    const tip=[a?'✓ 学习':'',p?'✓ 练习':''].filter(Boolean);
     cell.title=key+(tip.length?' · '+tip.join(' · ')+(a&&p?' · 双修':''):' · 未打卡');cell.setAttribute('aria-label',cell.title)}
    if(key===today)cell.classList.add('is-today');map.appendChild(cell)}
   applyView(false);
@@ -109,7 +108,7 @@ const PRACTICE_DATES = ["2026-10-09", "2026-10-10", "2026-10-11", "2026-10-12", 
   const on=document.querySelector('#seg button.on'),th=$('thumb');th.style.width=on.offsetWidth+'px';th.style.transform=`translateX(${on.offsetLeft}px)`;
   let html,vals;
   if(view==='all'){html=item('study','学习','s')+SEP+item('practice','练习','p')+SEP+item('both','双修','b')+`<span class="legend">${lg('--c-s','学习','s')}${lg('--c-p','练习','p')}${lg('--c-b','双修','b')}</span>`;vals={s:S.s,p:S.p,b:S.b}}
-  else if(view==='study'){html=item('study','学习','s')+SEP+item('fire','最长连续','ls')+`<span class="legend">${lg('--v-s','已完成','s')}${S.h?lg('--v-h','部分完成','h'):''}</span>`;vals={s:S.s,ls:S.ls}}
+  else if(view==='study'){html=item('study','学习','s')+SEP+item('fire','最长连续','ls')+`<span class="legend">${lg('--v-s','已完成','s')}</span>`;vals={s:S.s,ls:S.ls}}
   else{html=item('practice','练习','p')+SEP+item('fire','最长连续','lp')+`<span class="legend">${lg('--v-p','已练习','p')}</span>`;vals={p:S.p,lp:S.lp}}
   $('stats').innerHTML=html;
   $('stats').querySelectorAll('strong[data-k]').forEach(el=>{const k=el.dataset.k;el.dataset.v=shown[k]??0;countTo(el,vals[k]);shown[k]=vals[k]});

@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>论文书架</title>
+<style>
+:root{color-scheme:light dark;--ink:#2f3d52;--strong:#273245;--muted:#8d9bb0;--line:#dce4ef;--surface:#fff;--chip:#f2f5f9;
+ --A:#3b6ea5;--B:#7a4fa0;--C:#3f8a5a;--D:#c8742c;--S:#8a6d4b}
+@media(prefers-color-scheme:dark){:root{--ink:#d8dee9;--strong:#f2f5f8;--muted:#9aa7ba;--line:#354255;--surface:#181d25;--chip:#273142}}
+*{box-sizing:border-box}
+html,body{margin:0;background:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px 12px;overflow:hidden}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:9px;min-width:0}
+h1{margin:0;font-size:18px;font-weight:800;color:var(--strong);white-space:nowrap;letter-spacing:.2px}
+.count{font-size:12.5px;color:var(--muted);white-space:nowrap}.count b{color:var(--strong);font-size:14px}
+
+/* ---------- 场景 ---------- */
+.scene{position:relative;display:flex;gap:0;border-radius:10px;overflow:hidden;background:linear-gradient(#efe4cf,#e6d7bb);isolation:isolate;user-select:none}
+.side{position:relative;flex:0 0 var(--sideW);display:flex;flex-direction:column;justify-content:space-between;padding:10px 0 0 10px}
+.win{position:relative;width:calc(var(--sideW) - 26px);aspect-ratio:1.1;border-radius:6px 6px 3px 3px;overflow:hidden;box-shadow:0 0 0 4px #f8f1e4,0 0 0 6px #b99b74;margin:2px 0 0 4px}
+.sky{position:absolute;inset:0;transition:background 1.2s}
+.night .sky{background:linear-gradient(#141a33,#2a3361)}
+.dawn .sky{background:linear-gradient(#5a6aa8 0%,#f0a37a 70%,#ffd59a)}
+.day .sky{background:linear-gradient(#7cc2f2,#cfeaff)}
+.orb{position:absolute;border-radius:50%;transition:all 1.2s}
+.night .orb{width:16px;height:16px;right:16%;top:16%;background:#fff6d6;box-shadow:0 0 14px 3px rgba(255,246,214,.55),inset -5px -2px 0 #d9cfae}
+.dawn .orb{width:22px;height:22px;left:40%;top:62%;background:#ffd27a;box-shadow:0 0 22px 8px rgba(255,190,110,.7)}
+.day .orb{width:20px;height:20px;right:14%;top:14%;background:#fff3b0;box-shadow:0 0 26px 10px rgba(255,240,170,.8)}
+.star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;opacity:0;transition:opacity 1s}
+.night .star{opacity:.9;animation:tw 2.4s ease-in-out infinite}
+@keyframes tw{50%{opacity:.25}}
+.mull{position:absolute;inset:0;background:linear-gradient(90deg,transparent calc(50% - 1.5px),#f8f1e4 calc(50% - 1.5px) calc(50% + 1.5px),transparent 0),linear-gradient(transparent calc(50% - 1.5px),#f8f1e4 calc(50% - 1.5px) calc(50% + 1.5px),transparent 0)}
+.desk{position:relative;height:66px;margin-top:6px}
+.desk .top-b{position:absolute;left:-10px;right:-6px;bottom:22px;height:7px;background:linear-gradient(#a37a50,#87613c);border-radius:2px;box-shadow:0 2px 0 #6e4d2e}
+.desk .leg{position:absolute;bottom:0;width:6px;height:22px;background:#7a5636}
+.pile{position:absolute;left:4px;bottom:29px;width:34px;cursor:pointer}
+.pile i{display:block;height:2px;margin-top:1px;background:#fbfaf6;border-radius:1px;box-shadow:0 .5px 0 rgba(0,0,0,.18)}
+.pile i.y{background:#e9c98f}
+.lamp{position:absolute;right:6px;bottom:29px;width:46px;height:52px;cursor:pointer;overflow:visible}
+.cone{position:absolute;right:-24px;bottom:-4px;width:120px;height:70px;pointer-events:none;opacity:0;transition:opacity .8s;background:radial-gradient(ellipse at 62% 0%,rgba(255,225,150,.55),rgba(255,225,150,0) 70%);clip-path:polygon(48% 0,76% 0,100% 100%,10% 100%)}
+.lit .cone{opacity:1}
+.bulb{transition:fill .5s}
+.lit .bulb{fill:#ffe9a8;filter:drop-shadow(0 0 5px #ffd36b)}
+.lamp.flick{animation:flick .6s}
+@keyframes flick{20%,60%{opacity:.4}40%,80%{opacity:1}}
+.mug{position:absolute;left:44px;bottom:29px;width:10px;height:11px;background:#d8604a;border-radius:1px 1px 3px 3px}
+.mug::after{content:"";position:absolute;right:-4px;top:2px;width:4px;height:5px;border:1.5px solid #d8604a;border-left:0;border-radius:0 4px 4px 0}
+
+.case{position:relative;flex:1;min-width:0;margin:8px 8px 0 12px;padding:0 6px;background:linear-gradient(#6d4b2f,#5b3e26);border-radius:5px 5px 0 0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+.row{position:relative;height:var(--rowH);display:flex;align-items:flex-end;gap:2px;padding:0 4px 7px;background:linear-gradient(#3a271a,#4a3322)}
+.row+.row{margin-top:0}
+.row::after{content:"";position:absolute;left:-6px;right:-6px;bottom:0;height:7px;background:linear-gradient(#9a7149,#7d5a37);box-shadow:0 2px 2px rgba(0,0,0,.25)}
+.row:first-child{margin-top:6px}
+.bk{position:relative;display:block;text-decoration:none;flex:0 0 var(--w);height:var(--h);border-radius:2px 2px 1px 1px;cursor:pointer;
+ background:linear-gradient(90deg,rgba(0,0,0,.28),rgba(255,255,255,.14) 28%,rgba(255,255,255,0) 60%,rgba(0,0,0,.3)),var(--c);
+ box-shadow:inset 0 0 0 .5px rgba(0,0,0,.25);transition:transform .18s ease,opacity .25s,filter .25s;transform-origin:bottom center;
+ animation:slide .45s cubic-bezier(.2,.9,.3,1.1) both;animation-delay:calc(var(--i)*22ms);filter:brightness(var(--br,1))}
+.bk::before,.bk::after{content:"";position:absolute;left:1px;right:1px;height:1.6px;background:var(--band,rgba(255,255,255,.35))}
+.bk::before{top:5px}.bk::after{bottom:5px}
+.bk span{position:absolute;inset:9px 0;writing-mode:vertical-rl;display:flex;align-items:center;justify-content:flex-start;overflow:hidden;white-space:nowrap;font-size:8px;line-height:1;color:rgba(255,255,255,.9);letter-spacing:.3px;text-shadow:0 1px 1px rgba(0,0,0,.35)}
+.bk.thin span{display:none}
+.bk:hover{transform:translateY(-5px)}
+.bk.out{transform:translateY(-12px) rotate(-2deg)}
+.bk.fade{opacity:.22;filter:saturate(.3)}
+.bk.new{animation:drop .9s cubic-bezier(.3,1.45,.5,1) both;animation-delay:calc(.5s + var(--k)*.25s)}
+.bk.new .tagnew{position:absolute;left:50%;top:-13px;transform:translateX(-50%);font-size:7.5px;font-weight:800;color:#fff;background:#e0533a;border-radius:3px;padding:0 2px;line-height:10px;animation:bob 1.6s ease-in-out infinite}
+@keyframes slide{from{transform:translateY(-6px);opacity:0}}
+@keyframes drop{0%{transform:translateY(-120px) rotate(-14deg);opacity:0}60%{opacity:1}100%{transform:none}}
+@keyframes bob{50%{transform:translate(-50%,-2px)}}
+
+.pend{position:absolute;top:0;width:2px;background:#444;opacity:0;transition:opacity .8s;pointer-events:none}
+.pend b{position:absolute;left:50%;bottom:-10px;transform:translateX(-50%);width:22px;height:12px;border-radius:11px 11px 3px 3px;background:#3d4450}
+.pend b::after{content:"";position:absolute;left:6px;bottom:-5px;width:10px;height:7px;border-radius:0 0 6px 6px;background:#fff2c4;box-shadow:0 4px 18px 6px rgba(255,226,150,.6)}
+.pend.on{opacity:1}
+
+.dark{position:absolute;inset:0;pointer-events:none;z-index:5;transition:background 1.4s}
+.tip{position:absolute;z-index:8;max-width:220px;background:rgba(24,28,38,.94);color:#eef2f7;border-radius:8px;padding:7px 9px;font-size:11px;line-height:1.5;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.tip.show{opacity:1;transform:none}
+.tip b{font-size:12px;color:#fff;display:block;margin-bottom:1px}
+.tip .m{color:#b8c3d3}.tip .go{color:#ffd98a}
+.toast{position:absolute;z-index:9;left:50%;top:10px;transform:translate(-50%,-30px);background:#fff;color:#273245;font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.18);opacity:0;transition:all .45s cubic-bezier(.3,1.4,.5,1);white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.empty{position:absolute;z-index:6;left:var(--sideW);right:0;top:42%;text-align:center;color:#e8dcc4;font-size:12px;opacity:.85;pointer-events:none}
+
+@media(max-width:560px){h1{font-size:15px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="card" id="root">
+ <div class="top"><h1>📚 论文书架</h1><span class="count" id="count"></span></div>
+ <div class="scene" id="scene">
+  <div class="side" id="side">
+   <div class="win night" id="win"><div class="sky"></div><div class="orb"></div><div id="stars"></div><div class="mull"></div></div>
+   <div class="desk">
+    <div class="top-b"></div><div class="leg" style="left:-2px"></div><div class="leg" style="right:2px"></div>
+    <div class="pile" id="pile" title=""></div>
+    <div class="mug"></div>
+    <div class="lamp" id="lamp" title="台灯">
+     <div class="cone"></div>
+     <svg viewBox="0 0 46 52" width="46" height="52" aria-hidden="true">
+      <ellipse cx="34" cy="50" rx="10" ry="2.4" fill="#2f3440"/>
+      <path d="M34 49 L30 30 L14 16" stroke="#3a404c" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <circle cx="30" cy="30" r="2.2" fill="#3a404c"/>
+      <path d="M2 18 L16 6 L24 15 Z" fill="#2f6f62"/>
+      <ellipse class="bulb" cx="11" cy="18.5" rx="5" ry="2.2" fill="#7b7f86" transform="rotate(-40 11 18.5)"/>
+     </svg>
+    </div>
+   </div>
+  </div>
+  <div class="case" id="case"></div>
+  <div class="pend" id="pend"><b></b></div>
+  <div class="dark" id="dark"></div>
+  <div class="empty" id="empty"></div>
+  <div class="tip" id="tip"></div>
+  <div class="toast" id="toast"></div>
+ </div>
+</main>
+<script>
+/* ================= 每读完一篇，就在 PAPERS 末尾加一行 =================
+   title：书脊上显示的论文名
+   pdf：PDF 在仓库里的路径（把 PDF 上传到同一仓库的 papers 文件夹）
+   date：读完的日期 YYYY-MM-DD（同一文件夹里的 Paper_heatmap.html 会自动读取它） */
+const PAPERS = [
+];
+/* ===================================================================== */
+const TARGET = 100;   // 读满 100 篇，房间全亮
+const COLORS = ["#8e3b3b", "#2f4a6d", "#3d6b4f", "#b5862f", "#6a4a78", "#2f6e70", "#7a5638", "#4f5b6b", "#7d2e46", "#6b6a35", "#3b5f8a", "#9a5a2e"];
+const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
+const hash = s => { let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
+let list = PAPERS.filter(p => p && p.title).map((p, i) => ({ ...p, ord: i }));
+if (q.has("demo")) { const n = +q.get("demo") || 0; list = Array.from({ length: n }, (_, i) => ({ title: "Paper " + (i + 1), pdf: "", date: "", ord: i })); }
+list.sort((a, b) => (a.date || "0000") < (b.date || "0000") ? -1 : (a.date || "0000") > (b.date || "0000") ? 1 : a.ord - b.ord);
+const n = list.length, p = Math.min(1, n / TARGET);
+let pinned = null;
+
+/* 新上架：和上次打开时相比新增的几本，会从上方掉进书架 */
+let seen = null; try { seen = JSON.parse(localStorage.getItem("shelf-seen") || "null"); } catch (e) {}
+const fresh = seen === null || q.has("still") ? 0 : Math.max(0, n - seen);
+try { if (!q.has("demo")) localStorage.setItem("shelf-seen", JSON.stringify(n)); } catch (e) {}
+
+function layout() {
+  const sc = $("scene"), W = sc.clientWidth, small = W < 520;
+  const sideW = small ? 86 : 128, rowH = small ? 56 : 64;
+  sc.style.setProperty("--sideW", sideW + "px"); sc.style.setProperty("--rowH", rowH + "px");
+  const caseW = W - sideW - 20 - 12 - 8;                     // 书柜内宽
+  const inner = caseW - 12 - 8;
+  const WOF = b => (small ? 12 : 16) + hash(b.title) % (small ? 3 : 4);
+  const rows = [[]]; let x = 0;
+  list.forEach(b => { const w = WOF(b); if (x + w > inner && rows[rows.length - 1].length) { rows.push([]); x = 0; } rows[rows.length - 1].push(b); x += w + 2; });
+  while (rows.length < 3) rows.push([]);
+  const cs = $("case"); cs.innerHTML = "";
+  let i = 0;
+  rows.forEach(r => {
+    const row = document.createElement("div"); row.className = "row";
+    r.forEach(b => {
+      const h = hash(b.title), el = document.createElement(b.pdf ? "a" : "b"), w = WOF(b);
+      if (b.pdf) { el.href = encodeURI(b.pdf); el.target = "_blank"; el.rel = "noopener"; }
+      el.className = "bk";
+      el.style.cssText = `--w:${w}px;--h:${rowH - 14 - (h % 9)}px;--c:${COLORS[h % COLORS.length]};--br:${(0.9 + (h % 17) / 100).toFixed(2)};--i:${i}`;
+      const k = n - 1 - list.indexOf(b);
+      if (k < fresh) { el.classList.add("new"); el.style.setProperty("--k", fresh - 1 - k); el.innerHTML = `<i class="tagnew">NEW</i>`; }
+      el.insertAdjacentHTML("beforeend", `<span>${esc(b.title)}</span>`);
+      el.dataset.idx = list.indexOf(b);
+      row.appendChild(el); i++;
+    });
+    cs.appendChild(row);
+  });
+  // 吊灯放在书柜正上方居中
+  const pend = $("pend"); pend.style.left = (sideW + 20 + caseW / 2) + "px"; pend.style.height = "10px";
+  pend.classList.toggle("on", n >= 20);
+  light();
+}
+
+function light() {
+  const sc = $("scene").getBoundingClientRect(), lamp = $("lamp").getBoundingClientRect(), win = $("win").getBoundingClientRect();
+  const lx = lamp.left - sc.left + 10, ly = lamp.top - sc.top + 16, wx = win.left - sc.left + win.width / 2, wy = win.top - sc.top + win.height / 2;
+  const D = "12,14,24", a = (0.64 * (1 - p * 0.92)).toFixed(3), R = 150 + p * sc.width * 1.2;
+  const g = [];
+  if (n > 0) g.push(`radial-gradient(circle at ${lx}px ${ly}px, rgba(255,214,140,.16) 0, rgba(${D},0) ${R * 0.35}px, rgba(${D},${a}) ${R}px)`);
+  else g.push(`radial-gradient(circle at ${wx}px ${wy}px, rgba(${D},.35) 0, rgba(${D},.74) 120px)`);
+  if (n >= 20) { const px = parseFloat($("pend").style.left), R2 = 60 + (p - .2) * sc.width; g.unshift(`radial-gradient(circle at ${px}px 18px, rgba(255,230,160,.12) 0, rgba(${D},0) ${R2}px)`); }
+  $("dark").style.background = g.join(",");
+  $("side").classList.toggle("lit", n > 0);
+  $("win").className = "win " + (p >= .8 ? "day" : p >= .4 ? "dawn" : "night");
+  $("empty").textContent = n ? "" : "放上第一篇论文，台灯就会亮起来";
+}
+
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+function header() {
+  $("count").innerHTML = `已上架 <b>${n}</b> 篇`;
+  const pile = $("pile"), m = Math.min(n, 16);
+  pile.innerHTML = Array.from({ length: m }, (_, i) => `<i class="${i % 4 === 1 ? "y" : ""}" style="transform:translateX(${(hash("p" + i) % 7) - 3}px) rotate(${(hash("r" + i) % 7) - 3}deg)"></i>`).join("");
+  pile.title = n ? `桌上堆了 ${n} 篇读过的论文` : "";
+  const st = $("stars"); st.innerHTML = Array.from({ length: 9 }, (_, i) => `<i class="star" style="left:${8 + (i * 37) % 80}%;top:${8 + (i * 53) % 70}%;animation-delay:${(i * .37) % 2}s"></i>`).join("");
+}
+
+function showTip(el) {
+  const b = list[+el.dataset.idx], sc = $("scene").getBoundingClientRect(), r = el.getBoundingClientRect(), tip = $("tip");
+  tip.innerHTML = `<b>${esc(b.title)}</b><span class="m">📅 ${b.date || "日期未记录"}</span>${b.pdf ? `<br><span class="go">📄 点击打开 PDF</span>` : ""}`;
+  tip.classList.add("show");
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = r.left - sc.left + r.width / 2 - tw / 2; x = Math.max(6, Math.min(sc.width - tw - 6, x));
+  let y = r.top - sc.top - th - 8; if (y < 4) y = r.bottom - sc.top + 6;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function hideTip() { if (!pinned) $("tip").classList.remove("show"); }
+
+$("case").addEventListener("mouseover", e => { const el = e.target.closest(".bk"); if (el && !pinned) showTip(el); });
+$("case").addEventListener("mouseout", e => { if (e.target.closest(".bk") && !e.relatedTarget?.closest?.(".bk")) hideTip(); });
+$("case").addEventListener("click", e => {
+  const el = e.target.closest(".bk"); if (!el) return;
+  el.classList.add("out"); setTimeout(() => el.classList.remove("out"), 450);
+  if (!list[+el.dataset.idx].pdf) toast("这本还没有 PDF");
+});
+$("lamp").addEventListener("click", () => { const l = $("lamp"); l.classList.remove("flick"); void l.offsetWidth; l.classList.add("flick"); toast(n ? `💡 房间已点亮 ${Math.round(p * 100)}%，继续读，会更亮` : "🌑 还没摸到开关：放上第一篇试试"); });
+$("pile").addEventListener("click", () => n && toast(`🗂️ 桌上堆了 ${n} 篇，像怀尔斯的书桌了`));
+
+let tt; function toast(s) { const t = $("toast"); t.textContent = s; t.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("show"), 2600); }
+
+header(); layout();
+if (q.has("still")) document.querySelectorAll(".bk").forEach(b => b.style.animation = "none");
+if (fresh) setTimeout(() => toast(`📚 新上架 ${fresh} 篇${fresh === 1 ? "：" + list[n - 1].title : ""}`), 700);
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { layout(); document.querySelectorAll(".bk").forEach(b => b.style.animation = "none"); }, 120); });
+</script>
+</body>
+</html>

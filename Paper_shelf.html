@@ -34,9 +34,15 @@ h1{margin:0;font-size:18px;font-weight:800;color:var(--strong);white-space:nowra
 .desk{position:relative;height:66px;margin-top:6px}
 .desk .top-b{position:absolute;left:-10px;right:-6px;bottom:22px;height:7px;background:linear-gradient(#a37a50,#87613c);border-radius:2px;box-shadow:0 2px 0 #6e4d2e}
 .desk .leg{position:absolute;bottom:0;width:6px;height:22px;background:#7a5636}
-.pile{position:absolute;left:4px;bottom:29px;width:34px;cursor:pointer}
-.pile i{display:block;height:2px;margin-top:1px;background:#fbfaf6;border-radius:1px;box-shadow:0 .5px 0 rgba(0,0,0,.18)}
-.pile i.y{background:#e9c98f}
+.pile{position:absolute;left:2px;bottom:29px;width:42px;display:flex;flex-direction:column-reverse;align-items:flex-start;z-index:2}
+.fb{position:relative;display:block;flex:0 0 auto;width:var(--bw);height:var(--bh);margin-top:1px;border-radius:1.5px 3px 3px 1.5px;cursor:pointer;text-decoration:none;
+ background:linear-gradient(90deg,var(--c) 0 calc(100% - 4px),#f3ead6 calc(100% - 4px));box-shadow:inset 0 -1px 0 rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.16);
+ transform:translateX(var(--dx)) rotate(var(--rt));transition:transform .18s;animation:land .5s cubic-bezier(.3,1.5,.5,1) both;animation-delay:calc(.15s + var(--i)*60ms)}
+.fb::after{content:"";position:absolute;left:3px;top:calc(50% - .5px);width:calc(100% - 11px);height:1px;background:var(--band,rgba(255,255,255,.35))}
+.fb:hover{transform:translateX(calc(var(--dx) + 4px)) rotate(var(--rt))}
+.more{flex:0 0 auto;margin:1px 0 0 6px;font-size:8.5px;line-height:11px;font-weight:800;font-style:normal;color:#fff;background:#e0533a;border-radius:4px;padding:0 3px;cursor:pointer;animation:bob2 1.8s ease-in-out infinite}
+@keyframes land{0%{transform:translate(var(--dx),-26px) rotate(var(--rt));opacity:0}100%{transform:translateX(var(--dx)) rotate(var(--rt));opacity:1}}
+@keyframes bob2{50%{transform:translateY(-2px)}}
 .lamp{position:absolute;right:6px;bottom:29px;width:46px;height:52px;cursor:pointer;overflow:visible}
 .cone{position:absolute;right:-24px;bottom:-4px;width:120px;height:70px;pointer-events:none;opacity:0;transition:opacity .8s;background:radial-gradient(ellipse at 62% 0%,rgba(255,225,150,.55),rgba(255,225,150,0) 70%);clip-path:polygon(48% 0,76% 0,100% 100%,10% 100%)}
 .lit .cone{opacity:1}
@@ -66,6 +72,8 @@ h1{margin:0;font-size:18px;font-weight:800;color:var(--strong);white-space:nowra
 .bk.new{animation:drop .9s cubic-bezier(.3,1.45,.5,1) both;animation-delay:calc(.5s + var(--k)*.25s)}
 .bk.new .tagnew{position:absolute;left:50%;top:-13px;transform:translateX(-50%);font-size:7.5px;font-weight:800;color:#fff;background:#e0533a;border-radius:3px;padding:0 2px;line-height:10px;animation:bob 1.6s ease-in-out infinite}
 @keyframes slide{from{transform:translateY(-6px);opacity:0}}
+.bk.fly{z-index:7;animation:fly 1.25s cubic-bezier(.5,.05,.3,1) both;animation-delay:calc(.7s + var(--k)*.45s)}
+@keyframes fly{0%{transform:translate(var(--fx),var(--fy)) rotate(-90deg) scale(.92)}50%{transform:translate(calc(var(--fx)*.45),calc(var(--fy)*.45 - 46px)) rotate(-40deg) scale(1.08)}100%{transform:none}}
 @keyframes drop{0%{transform:translateY(-120px) rotate(-14deg);opacity:0}60%{opacity:1}100%{transform:none}}
 @keyframes bob{50%{transform:translate(-50%,-2px)}}
 
@@ -121,8 +129,12 @@ h1{margin:0;font-size:18px;font-weight:800;color:var(--strong);white-space:nowra
 /* ================= 每读完一篇，就在 PAPERS 末尾加一行 =================
    title：书脊上显示的论文名
    pdf：PDF 在仓库里的路径（把 PDF 上传到同一仓库的 papers 文件夹）
-   date：读完的日期 YYYY-MM-DD（同一文件夹里的 Paper_heatmap.html 会自动读取它） */
+   date：读完的日期 YYYY-MM-DD（同一文件夹里的 Paper_heatmap.html 等组件会自动读取它） */
 const PAPERS = [
+];
+/* ================= 打算读、还没读完的论文放在 TO_READ（摆在书桌上） =================
+   读完后把那一行从 TO_READ 剪切到 PAPERS 末尾并补上 date，下次打开时它会从书桌飞上书架 */
+const TO_READ = [
 ];
 /* ===================================================================== */
 const TARGET = 100;   // 读满 100 篇，房间全亮
@@ -130,7 +142,9 @@ const COLORS = ["#8e3b3b", "#2f4a6d", "#3d6b4f", "#b5862f", "#6a4a78", "#2f6e70"
 const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
 const hash = s => { let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
 let list = PAPERS.filter(p => p && p.title).map((p, i) => ({ ...p, ord: i }));
-if (q.has("demo")) { const n = +q.get("demo") || 0; list = Array.from({ length: n }, (_, i) => ({ title: "Paper " + (i + 1), pdf: "", date: "", ord: i })); }
+let desk = TO_READ.filter(p => p && p.title).map((p, i) => ({ ...p, ord: i }));
+if (q.has("demo")) { const n = +q.get("demo") || 0, m = +q.get("desk") || 0; list = Array.from({ length: n }, (_, i) => ({ title: "Paper " + (i + 1), pdf: "", date: "", ord: i }));
+  desk = Array.from({ length: m }, (_, i) => ({ title: "To-read " + (i + 1), pdf: "", ord: i })); }
 list.sort((a, b) => (a.date || "0000") < (b.date || "0000") ? -1 : (a.date || "0000") > (b.date || "0000") ? 1 : a.ord - b.ord);
 const n = list.length, p = Math.min(1, n / TARGET);
 let pinned = null;
@@ -139,6 +153,12 @@ let pinned = null;
 let seen = null; try { seen = JSON.parse(localStorage.getItem("shelf-seen") || "null"); } catch (e) {}
 const fresh = seen === null || q.has("still") ? 0 : Math.max(0, n - seen);
 try { if (!q.has("demo")) localStorage.setItem("shelf-seen", JSON.stringify(n)); } catch (e) {}
+/* 读完上架：上次还在书桌上、这次出现在书架上的论文，会从书桌飞到书架 */
+const m = desk.length, deskNow = desk.map(b => b.title);
+let deskPrev = null; try { deskPrev = JSON.parse(localStorage.getItem("shelf-desk") || "null"); } catch (e) {}
+const flown = new Set(deskPrev && !q.has("still") ? list.filter(b => deskPrev.includes(b.title) && !deskNow.includes(b.title)).map(b => b.title) : []);
+if (q.has("demo") && q.has("fly") && n) flown.add(list[n - 1].title);
+try { if (!q.has("demo")) localStorage.setItem("shelf-desk", JSON.stringify(deskNow)); } catch (e) {}
 
 function layout() {
   const sc = $("scene"), W = sc.clientWidth, small = W < 520;
@@ -160,7 +180,8 @@ function layout() {
       el.className = "bk";
       el.style.cssText = `--w:${w}px;--h:${rowH - 14 - (h % 9)}px;--c:${COLORS[h % COLORS.length]};--br:${(0.9 + (h % 17) / 100).toFixed(2)};--i:${i}`;
       const k = n - 1 - list.indexOf(b);
-      if (k < fresh) { el.classList.add("new"); el.style.setProperty("--k", fresh - 1 - k); el.innerHTML = `<i class="tagnew">NEW</i>`; }
+      if (flown.has(b.title)) el.classList.add("fly");
+      else if (k < fresh) { el.classList.add("new"); el.style.setProperty("--k", fresh - 1 - k); el.innerHTML = `<i class="tagnew">NEW</i>`; }
       el.insertAdjacentHTML("beforeend", `<span>${esc(b.title)}</span>`);
       el.dataset.idx = list.indexOf(b);
       row.appendChild(el); i++;
@@ -171,6 +192,11 @@ function layout() {
   const pend = $("pend"); pend.style.left = (sideW + 20 + caseW / 2) + "px"; pend.style.height = "10px";
   pend.classList.toggle("on", n >= 20);
   light();
+  // 从书桌飞上书架：起点 = 书桌上那摞书的顶部
+  const pr = $("pile").getBoundingClientRect(); let fk = 0;
+  document.querySelectorAll(".bk.fly").forEach(el => { const r = el.getBoundingClientRect();
+    el.style.setProperty("--fx", (pr.left + 18 - (r.left + r.width / 2)) + "px"); el.style.setProperty("--fy", (pr.top - 4 - r.bottom) + "px"); el.style.setProperty("--k", fk++);
+    el.addEventListener("animationend", () => { el.style.animation = "none"; el.classList.remove("fly"); }, { once: true }); });
 }
 
 function light() {
@@ -189,11 +215,13 @@ function light() {
 
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
+const DESK_MAX = 8;
 function header() {
-  $("count").innerHTML = `已上架 <b>${n}</b> 篇`;
-  const pile = $("pile"), m = Math.min(n, 16);
-  pile.innerHTML = Array.from({ length: m }, (_, i) => `<i class="${i % 4 === 1 ? "y" : ""}" style="transform:translateX(${(hash("p" + i) % 7) - 3}px) rotate(${(hash("r" + i) % 7) - 3}deg)"></i>`).join("");
-  pile.title = n ? `桌上堆了 ${n} 篇读过的论文` : "";
+  $("count").innerHTML = `已上架 <b>${n}</b> 篇 · 书桌待读 <b>${m}</b>`;
+  const small = $("scene").clientWidth < 520, show = desk.slice(0, DESK_MAX);
+  $("pile").innerHTML = show.map((b, i) => { const h = hash(b.title), tag = b.pdf ? "a" : "b";
+    return `<${tag} class="fb" data-d="${i}" ${b.pdf ? `href="${encodeURI(b.pdf)}" target="_blank" rel="noopener"` : ""} style="--bw:${(small ? 21 : 29) + h % (small ? 6 : 9)}px;--bh:${5 + h % 3}px;--c:${COLORS[h % COLORS.length]};--dx:${h % 5}px;--rt:${(h % 5) - 2}deg;--i:${i}"></${tag}>`; }).join("")
+    + (m > DESK_MAX ? `<i class="more" id="more">+${m - DESK_MAX}</i>` : "");
   const st = $("stars"); st.innerHTML = Array.from({ length: 9 }, (_, i) => `<i class="star" style="left:${8 + (i * 37) % 80}%;top:${8 + (i * 53) % 70}%;animation-delay:${(i * .37) % 2}s"></i>`).join("");
 }
 
@@ -207,6 +235,14 @@ function showTip(el) {
   tip.style.left = x + "px"; tip.style.top = y + "px";
 }
 function hideTip() { if (!pinned) $("tip").classList.remove("show"); }
+function showDeskTip(el) {
+  const b = desk[+el.dataset.d], sc = $("scene").getBoundingClientRect(), r = el.getBoundingClientRect(), tip = $("tip");
+  tip.innerHTML = `<b>${esc(b.title)}</b><span class="m">📌 待读${b.date ? " · " + b.date + " 放上书桌" : ""}</span>${b.pdf ? `<br><span class="go">📄 点击打开 PDF</span>` : ""}`;
+  tip.classList.add("show");
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  tip.style.left = Math.max(6, Math.min(sc.width - tw - 6, r.right - sc.left + 8)) + "px";
+  tip.style.top = Math.max(4, r.top - sc.top - th / 2) + "px";
+}
 
 $("case").addEventListener("mouseover", e => { const el = e.target.closest(".bk"); if (el && !pinned) showTip(el); });
 $("case").addEventListener("mouseout", e => { if (e.target.closest(".bk") && !e.relatedTarget?.closest?.(".bk")) hideTip(); });
@@ -216,13 +252,18 @@ $("case").addEventListener("click", e => {
   if (!list[+el.dataset.idx].pdf) toast("这本还没有 PDF");
 });
 $("lamp").addEventListener("click", () => { const l = $("lamp"); l.classList.remove("flick"); void l.offsetWidth; l.classList.add("flick"); toast(n ? `💡 房间已点亮 ${Math.round(p * 100)}%，继续读，会更亮` : "🌑 还没摸到开关：放上第一篇试试"); });
-$("pile").addEventListener("click", () => n && toast(`🗂️ 桌上堆了 ${n} 篇，像怀尔斯的书桌了`));
+$("pile").addEventListener("mouseover", e => { const el = e.target.closest(".fb"); if (el) showDeskTip(el); });
+$("pile").addEventListener("mouseout", e => { if (e.target.closest(".fb") && !e.relatedTarget?.closest?.(".fb")) hideTip(); });
+$("pile").addEventListener("click", e => { const el = e.target.closest(".fb");
+  if (el) { if (!desk[+el.dataset.d].pdf) toast("这篇还没有 PDF"); return; }
+  if (e.target.closest(".more")) toast(`📌 书桌上还有 ${m} 篇待读`); });
 
 let tt; function toast(s) { const t = $("toast"); t.textContent = s; t.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("show"), 2600); }
 
 header(); layout();
-if (q.has("still")) document.querySelectorAll(".bk").forEach(b => b.style.animation = "none");
-if (fresh) setTimeout(() => toast(`📚 新上架 ${fresh} 篇${fresh === 1 ? "：" + list[n - 1].title : ""}`), 700);
+if (q.has("still")) document.querySelectorAll(".bk,.fb").forEach(b => b.style.animation = "none");
+if (flown.size) setTimeout(() => toast(`✅ 读完上架${flown.size === 1 ? "：" + [...flown][0] : " " + flown.size + " 篇"}`), 900);
+else if (fresh) setTimeout(() => toast(`📚 新上架 ${fresh} 篇${fresh === 1 ? "：" + list[n - 1].title : ""}`), 700);
 let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { layout(); document.querySelectorAll(".bk").forEach(b => b.style.animation = "none"); }, 120); });
 </script>
 </body>

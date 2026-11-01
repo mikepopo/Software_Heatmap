@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>月度回顾</title>
+<style>
+:root{color-scheme:light dark;--ink:#2f3d52;--strong:#273245;--muted:#91a0b6;--line:#dce4ef;--surface:rgba(255,255,255,.96);--chip:#f2f5f9;--chip2:#e6ebf2;
+ --t:#12948c;--t2:#0b6f69;--tl:#a9e0d9;--tbg:#e8f6f4;--gold:#d9a521;--warm:#e8590c}
+@media(prefers-color-scheme:dark){:root{--ink:#d8dee9;--strong:#f2f5f8;--muted:#9aa7ba;--line:#354255;--surface:rgba(24,29,37,.96);--chip:#273142;--chip2:#323d50;
+ --t:#3cc4b8;--t2:#6fdcd1;--tl:#1d5752;--tbg:rgba(60,196,184,.10);--gold:#f0c24b;--warm:#ff8a4c}}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:transparent;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow:hidden;box-shadow:0 1px 2px rgba(31,45,61,.04)}
+.top{display:flex;align-items:center;gap:10px;min-width:0}
+h1{margin:0;font-size:18px;font-weight:800;color:var(--strong);white-space:nowrap;letter-spacing:.2px}
+.meta{margin-left:auto;font-size:12.5px;color:var(--muted);white-space:nowrap}.meta b{color:var(--strong);font-size:14px}
+.toast{position:absolute;z-index:20;left:50%;top:10px;transform:translate(-50%,-34px);background:var(--strong);color:var(--surface);font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:all .45s cubic-bezier(.3,1.4,.5,1);white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:520px){h1{font-size:15.5px}.card{padding:12px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.top{margin-bottom:10px}
+.nav{margin-left:auto;display:flex;align-items:center;gap:4px}
+.nav button{width:24px;height:24px;padding:0;border:0;border-radius:7px;background:var(--chip);color:var(--strong);font-size:15px;line-height:1;cursor:pointer;display:grid;place-items:center;font-family:inherit}
+.nav button:hover:not(:disabled){background:var(--chip2)}
+.nav button:disabled{opacity:.32;cursor:default}
+.nav span{min-width:88px;text-align:center;font-size:13px;font-weight:750;color:var(--strong);white-space:nowrap}
+.wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px}
+.lb{font-size:12px;color:var(--muted)}
+.big{display:flex;align-items:baseline;gap:5px;margin-top:1px;white-space:nowrap}
+.num{font-size:38px;line-height:1.05;font-weight:850;color:var(--t);letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.unit{font-size:14px;font-weight:700;color:var(--strong)}
+.delta{margin-left:6px;align-self:center;font-size:11.5px;font-weight:750;padding:2px 7px;border-radius:999px;background:var(--chip);color:var(--muted)}
+.delta.up{background:var(--tbg);color:var(--t)}.delta.down{background:rgba(232,89,12,.1);color:var(--warm)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:9px}
+.stats div{padding:6px 8px;border-radius:8px;background:var(--chip);min-width:0}
+.stats b{display:block;font-size:15px;font-weight:800;color:var(--strong);white-space:nowrap}.stats b small{font-size:11px;font-weight:700;color:var(--muted);margin-left:1px}
+.stats span{display:block;font-size:10.5px;color:var(--muted);white-space:nowrap;margin-top:1px}
+.bars{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;align-items:end;height:84px;margin-top:10px}
+.bc{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;cursor:pointer;min-width:0}
+.bc .v{font-size:10.5px;font-weight:750;color:var(--muted);margin-bottom:2px;opacity:0;transition:opacity .3s .5s}
+.bc .b{width:100%;max-width:30px;height:0;min-height:2px;border-radius:5px 5px 2px 2px;background:var(--tl);transition:height .8s cubic-bezier(.3,1.2,.4,1);transition-delay:calc(var(--i)*60ms)}
+.bc .m{margin-top:4px;font-size:10.5px;color:var(--muted);white-space:nowrap}
+.bc.sel .b{background:var(--t)}.bc.sel .m,.bc.sel .v{color:var(--t);font-weight:800}
+.bc:hover .b{filter:brightness(.95)}
+.shown .bc .v{opacity:1}
+.rgt{display:flex;flex-direction:column;min-width:0;border-radius:10px;background:var(--chip);padding:9px 10px}
+.lh{font-size:12px;font-weight:750;color:var(--strong);display:flex;justify-content:space-between;gap:8px}.lh span{color:var(--muted);font-weight:600}
+.list{list-style:none;margin:6px 0 0;padding:0;flex:1;max-height:178px;overflow:auto;scrollbar-width:thin}
+.list li{display:flex;gap:8px;align-items:baseline;padding:4px 0;border-top:1px dashed var(--line);font-size:12.5px;min-width:0;animation:in .35s ease-out both;animation-delay:calc(var(--i)*40ms)}
+.list li:first-child{border-top:0}
+.list .dt{flex:0 0 auto;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.list .tt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);text-decoration:none}
+.list a.tt:hover{color:var(--t);text-decoration:underline}
+.list li.empty{display:block;border:0;text-align:center;font-size:12px;line-height:1.7;color:var(--muted);padding:38px 0 20px;animation:none}
+.foot{margin-top:11px;padding:7px 11px;border-radius:9px;font-size:12.5px;font-weight:650;color:var(--strong);background:var(--tbg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foot b{color:var(--t)}.foot.win{background:linear-gradient(90deg,rgba(217,165,33,.18),rgba(217,165,33,.04))}.foot.past{background:var(--chip);color:var(--muted);font-weight:600}
+@keyframes in{from{opacity:0;transform:translateX(6px)}}
+@media(max-width:560px){.wrap{grid-template-columns:1fr}.num{font-size:32px}.foot{white-space:normal}}
+</style></head>
+<body>
+<main class="card" id="root">
+ <div class="top"><h1>📅 月度回顾</h1><div class="nav"><button id="pv" aria-label="上个月">‹</button><span id="ml"></span><button id="nx" aria-label="下个月">›</button></div></div>
+ <div class="wrap">
+  <section>
+   <div class="lb" id="lb"></div>
+   <div class="big"><span class="num" id="num">0</span><span class="unit">篇</span><span class="delta" id="delta"></span></div>
+   <div class="stats"><div><b id="sd"></b><span>阅读天数</span></div><div><b id="sr"></b><span>最长连续</span></div><div><b id="sw"></b><span>最爱哪天读</span></div></div>
+   <div class="bars" id="bars"></div>
+  </section>
+  <section class="rgt"><div class="lh">本月读完<span id="lc"></span></div><ol class="list" id="list"></ol></section>
+ </div>
+ <div class="foot" id="foot"></div>
+ <div class="toast" id="toast"></div>
+</main>
+<script>
+/* ---------- 公共：自动读取同一文件夹里的 Paper_shelf.html（PAPERS、TO_READ）和 Paper_heatmap.html（READ_DATES） ---------- */
+const Q = new URLSearchParams(location.search), STILL = Q.has("still");
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, "0");
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseD = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addD = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const dayDiff = (a, b) => Math.round((parseD(b) - parseD(a)) / 864e5);
+const isD = s => /^\d{4}-\d{2}-\d{2}$/.test(s || "");
+const hashS = s => { let h = 7; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const WD = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+function grabArr(src, name) {
+  const m = (src || "").match(new RegExp("const\\s+" + name + "\\s*=\\s*\\[([\\s\\S]*?)\\]\\s*;"));
+  if (!m) return [];
+  try { return Function("return [" + m[1] + "]")() || []; } catch (e) { return []; }
+}
+function buildData(papers, extra, toRead) {
+  papers = (papers || []).filter(p => p && p.title).map((p, i) => ({ title: String(p.title), date: isD(p.date) ? p.date : "", pdf: p.pdf || "", i }));
+  papers.sort((a, b) => (a.date || "0") < (b.date || "0") ? -1 : (a.date || "0") > (b.date || "0") ? 1 : a.i - b.i);
+  const perDay = {};
+  papers.forEach(p => { if (p.date) perDay[p.date] = (perDay[p.date] || 0) + 1; });
+  let extraN = 0;
+  (extra || []).forEach(d => { if (isD(d) && !perDay[d]) { perDay[d] = 1; extraN++; } });
+  const sorted = Object.keys(perDay).sort(), days = new Set(sorted);
+  const now = new Date(), T = ymd(now), Y = ymd(addD(now, -1));
+  let cur = 0; const base = days.has(T) ? now : days.has(Y) ? addD(now, -1) : null;
+  if (base) for (let d = base; days.has(ymd(d)); d = addD(d, -1)) cur++;
+  let best = 0, run = 0, prev = null, maxGapRet = 0;
+  for (const s of sorted) { const g = prev ? dayDiff(prev, s) : 0; run = g === 1 ? run + 1 : 1; if (g > maxGapRet) maxGapRet = g; best = Math.max(best, run); prev = s; }
+  const last = sorted[sorted.length - 1] || null;
+  return { papers, toRead: (toRead || []).filter(p => p && p.title), perDay, days, sorted, total: papers.length + extraN,
+    T, Y, now, cur, best, last, since: last ? dayDiff(last, T) : null, readToday: days.has(T), maxGapRet };
+}
+const DEMO_TITLES = ["GeoTransformer", "Predator", "FCGF", "D3Feat", "CoFiNet", "RoITr", "PEAL", "Lepard", "SpinNet", "YOHO", "PointDSC", "SC2-PCR", "MAC", "BUFFER", "RegTR", "TEASER++", "Go-ICP", "FGR", "DGR", "3DMatch", "PointMBF", "DIP", "PPFNet", "Deep Closest Point"];
+function demoData(spec) {
+  const [n = 12, t = 1, gap = 0, desk = 3] = String(spec).split(",").map(Number);
+  let r = 11; const rnd = () => (r = (r * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const now = new Date(), papers = [];
+  let cur = t ? now : addD(now, -1 - gap);
+  for (let i = 0; i < n; i++) {
+    papers.push({ title: DEMO_TITLES[i % DEMO_TITLES.length] + (i >= DEMO_TITLES.length ? " v" + Math.floor(i / DEMO_TITLES.length + 1) : ""), date: ymd(cur), pdf: "" });
+    if (i % 5 === 3 && rnd() < .5) continue;                       // 偶尔一天读两篇
+    cur = addD(cur, -(i < 4 ? 1 : rnd() < .5 ? 1 : 1 + Math.floor(rnd() * 4)));
+  }
+  return buildData(papers.reverse(), [], DEMO_TITLES.slice(0, desk).map(x => ({ title: x + " (待读)" })));
+}
+async function loadData() {
+  if (Q.has("demo")) return demoData(Q.get("demo") || "12");
+  const get = u => fetch(u + "?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.text() : "").catch(() => "");
+  const [s, h] = await Promise.all([get("./Paper_shelf.html"), get("./Paper_heatmap.html")]);
+  return buildData(grabArr(s, "PAPERS"), grabArr(h, "READ_DATES"), grabArr(s, "TO_READ"));
+}
+let toastT; function toast(s, ms = 2600) { const t = $("toast"); if (!t) return; t.textContent = s; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), ms); }
+function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); if (!Q.has("demo")) localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
+
+/* 不用手动修改：自动读取同一文件夹里 Paper_shelf.html 的已读论文，按月汇总 */
+(async () => {
+  const D = await loadData(), now = D.now;
+  const mk = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`, addM = (k, n) => { const [y, m] = k.split("-").map(Number); return mk(new Date(y, m - 1 + n, 1)); };
+  const curM = mk(now), first = D.sorted.length ? D.sorted[0].slice(0, 7) : addM(curM, -5);
+  const minM = first < addM(curM, -5) ? first : addM(curM, -5);
+  const cnt = k => Object.keys(D.perDay).filter(d => d.startsWith(k)).reduce((a, d) => a + D.perDay[d], 0);
+  const label = k => `${+k.slice(0, 4)}年${+k.slice(5)}月`;
+  let sel = Q.has("m") && /^\d{4}-\d{2}$/.test(Q.get("m")) ? Q.get("m") : curM; if (sel > curM) sel = curM; if (sel < minM) sel = minM;
+  let animT;
+  function render(first) {
+    const n = cnt(sel), pm = addM(sel, -1), pn = cnt(pm), isCur = sel === curM, mNum = +sel.slice(5);
+    $("ml").textContent = label(sel); $("pv").disabled = sel <= minM; $("nx").disabled = sel >= curM;
+    $("lb").textContent = isCur ? "本月已读" : `${mNum}月共读`;
+    // 数字滚动
+    const el = $("num"), from = first ? 0 : +el.textContent || 0, t0 = performance.now(); cancelAnimationFrame(animT);
+    const step = t => { const k = Math.min(1, (t - t0) / 600), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(from + (n - from) * e); if (k < 1) animT = requestAnimationFrame(step); };
+    STILL ? el.textContent = n : animT = requestAnimationFrame(step);
+    const dl = $("delta"), df = n - pn;
+    const soft = isCur && df < 0;   // 本月还没结束：落后时只显示上月数量，不显示红色负数
+    dl.className = "delta " + (df > 0 ? "up" : df < 0 && !soft ? "down" : "");
+    dl.textContent = pn === 0 && n === 0 ? "上月也是 0" : df > 0 ? `比上月 +${df} ↑` : soft ? `上月 ${pn} 篇` : df < 0 ? `比上月 ${df} ↓` : "与上月持平";
+    // 本月统计
+    const days = D.sorted.filter(d => d.startsWith(sel));
+    let best = 0, run = 0, pr = null; days.forEach(d => { run = pr && dayDiff(pr, d) === 1 ? run + 1 : 1; best = Math.max(best, run); pr = d; });
+    const wc = [0, 0, 0, 0, 0, 0, 0]; days.forEach(d => wc[parseD(d).getDay()] += D.perDay[d]);
+    const order = [1, 2, 3, 4, 5, 6, 0], fav = order.reduce((a, w) => wc[w] > wc[a] ? w : a, 1);
+    $("sd").innerHTML = `${days.length}<small>天</small>`; $("sr").innerHTML = `${best}<small>天</small>`; $("sw").textContent = days.length ? WD[fav] : "—";
+    // 近 6 个月
+    const ms = Array.from({ length: 6 }, (_, i) => addM(sel, i - 5)), vs = ms.map(cnt), mx = Math.max(1, ...vs);
+    $("bars").classList.remove("shown");
+    $("bars").innerHTML = ms.map((k, i) => `<div class="bc ${k === sel ? "sel" : ""}" data-k="${k}" style="--i:${i}" title="${label(k)} · ${vs[i]} 篇"><span class="v">${vs[i] || ""}</span><i class="b" data-h="${Math.round(vs[i] / mx * 54)}"></i><span class="m">${+k.slice(5)}月</span></div>`).join("");
+    requestAnimationFrame(() => requestAnimationFrame(() => { document.querySelectorAll(".bc .b").forEach(b => b.style.height = b.dataset.h + "px"); $("bars").classList.add("shown"); }));
+    // 本月论文
+    const ps = D.papers.filter(p => p.date.startsWith(sel)).reverse();
+    $("lc").textContent = ps.length ? `${ps.length} 篇` : "";
+    $("list").innerHTML = ps.length ? ps.map((p, i) => `<li style="--i:${i}"><span class="dt">${p.date.slice(5)}</span>${p.pdf ? `<a class="tt" href="${encodeURI(p.pdf)}" target="_blank" rel="noopener" title="${esc(p.title)}">${esc(p.title)}</a>` : `<span class="tt" title="${esc(p.title)}">${esc(p.title)}</span>`}</li>`).join("")
+      : `<li class="empty">${isCur ? "这个月还没有读论文<br>去书架上挑一篇吧 📖" : "这个月没有阅读记录"}</li>`;
+    // 底部一句话
+    const ft = $("foot"); ft.className = "foot";
+    if (isCur) { const left = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate() + 1;
+      if (n > pn && pn > 0) { ft.classList.add("win"); ft.innerHTML = `🎉 已经超过上月 <b>${df}</b> 篇 · 本月还剩 <b>${left}</b> 天，继续冲`; }
+      else if (pn === 0) ft.innerHTML = n ? `👏 上月没读，这个月已经读了 <b>${n}</b> 篇 · 本月还剩 <b>${left}</b> 天` : `本月还剩 <b>${left}</b> 天 · 读一篇，开个好头`;
+      else ft.innerHTML = `💪 本月还剩 <b>${left}</b> 天，再读 <b>${pn - n + 1}</b> 篇就超过上月`;
+    } else { ft.classList.add("past"); ft.innerHTML = n ? `${mNum}月读了 ${n} 篇，阅读 ${days.length} 天${best >= 2 ? `，最长连续 ${best} 天` : ""}` : `${mNum}月没有阅读记录`; }
+  }
+  $("pv").onclick = () => { sel = addM(sel, -1); render(); };
+  $("nx").onclick = () => { sel = addM(sel, 1); render(); };
+  $("bars").addEventListener("click", e => { const b = e.target.closest(".bc"); if (b && b.dataset.k >= minM && b.dataset.k !== sel) { sel = b.dataset.k; render(); } });
+  render(true);
+})();
+</script>
+</body></html>

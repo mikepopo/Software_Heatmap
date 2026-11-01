@@ -5,12 +5,12 @@
 <title>论文阅读记录</title>
 <style>
 :root{color-scheme:light dark;--ink:#2f3d52;--strong:#273245;--muted:#91a0b6;--line:#dce4ef;--surface:rgba(255,255,255,.96);--picker:#f2f5f9;--seg-on:#fff;--today:#243244;--empty-cell:#eef2f6;--cell:12px;--gap:4px;
- /* 全部视图：阅读、实验是相近的浅色，两样都完成是深绿 */
- --c-s:#6cc070;--c-p:#c3e8b8;--c-b:#1f6b35;--c-h:#a8dba0;
+ /* 琥珀色系 · 全部视图：阅读、实验是相近的浅色，两样都完成是深琥珀 */
+ --c-s:#f2a444;--c-p:#fde3b6;--c-b:#c0600d;--c-h:#f8cd8c;
  /* 单项视图 */
- --v-s:#1f6b35;--v-h:#a8dba0;--v-p:#3f9e55}
+ --v-s:#de7a10;--v-h:#f9d39a;--v-p:#e8912a}
 @media(prefers-color-scheme:dark){:root{--ink:#d8dee9;--strong:#f2f5f8;--muted:#9aa7ba;--line:#354255;--surface:rgba(24,29,37,.96);--picker:#273142;--seg-on:#3a465a;--today:#f2f5f8;--empty-cell:#293344;
- --c-s:#3f8a4a;--c-p:#2a4a30;--c-b:#86d68f;--c-h:#2f5a36;--v-s:#86d68f;--v-h:#3f8a4a;--v-p:#5cb86a}}
+ --c-s:#a8641c;--c-p:#4a3317;--c-b:#f7b866;--c-h:#5f3f18;--v-s:#f3a443;--v-h:#7d5220;--v-p:#d98b2b}}
 *{box-sizing:border-box}html,body{margin:0;padding:0;width:100%;max-width:100%;min-height:0;background:transparent;overflow:hidden}body{color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
 .card{width:100%;margin:0;background:var(--surface);border:1px solid var(--line);border-radius:9px;box-shadow:0 1px 2px rgba(31,45,61,.04);padding:20px 12px 14px;overflow:hidden;container-type:inline-size}
 .topbar{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;width:100%}h1{margin:0;font-size:clamp(18px,2.4cqw,25px);line-height:1.15;letter-spacing:0;color:var(--strong);font-weight:750}
@@ -48,7 +48,7 @@
 <div class="heatmap-wrap" id="heatmap-wrap"><div class="heatmap" id="heatmap" aria-label="年度科研打卡热力图"></div></div>
 </main>
 <script>
-/* 每读完一天论文，就把日期加进 READ_DATES。日期格式 YYYY-MM-DD；更新时必须保留已有日期。 */
+/* 读论文的日期会自动从同一文件夹的 Paper_shelf.html 读取；也可以手动把日期加进 READ_DATES。日期格式 YYYY-MM-DD；更新时必须保留已有日期。 */
 const READ_DATES = [];
 const EXPERIMENT_DATES = []; /* 未使用 */
 (()=>{
@@ -115,7 +115,9 @@ const EXPERIMENT_DATES = []; /* 未使用 */
  $('seg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.dataset.v===view)return;view=b.dataset.v;try{localStorage.setItem('rs-hm-view',view)}catch(e){}
   $('heatmap').querySelectorAll('.pop').forEach(c=>c.classList.remove('pop'));applyView(true)});
  $('year-picker').addEventListener('change',e=>renderYear(Number(e.target.value),true));
- renderYear(Number($('year-picker').value||currentYear),!q.has('still'));
+ let went=false;const go=()=>{if(went)return;went=true;renderYear(Number($('year-picker').value||currentYear),!q.has('still'))};setTimeout(go,2500);
+ /* 自动读取同一文件夹里 Paper_shelf.html（论文书架）的阅读日期，和 READ_DATES 合并 */
+ fetch('./Paper_shelf.html?t='+Date.now()).then(r=>r.ok?r.text():'').then(h=>{const m=h.match(/const PAPERS\s*=\s*\[([\s\S]*?)\n\];/);if(m)(m[1].match(/date\s*:\s*["'](\d{4}-\d{2}-\d{2})["']/g)||[]).forEach(s=>done.add(s.match(/\d{4}-\d{2}-\d{2}/)[0]))}).catch(()=>{}).finally(go);
  addEventListener('resize',()=>{const on=document.querySelector('#seg button.on'),th=$('thumb');if(on){th.style.width=on.offsetWidth+'px';th.style.transform=`translateX(${on.offsetLeft}px)`}});
 })();
 </script></body></html>

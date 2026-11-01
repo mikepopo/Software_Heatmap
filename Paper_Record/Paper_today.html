@@ -42,7 +42,8 @@ h1{margin:0;font-size:18px;font-weight:800;color:var(--strong);white-space:nowra
 <body>
 <div class="bar" id="bar"><div class="ic" id="ic"></div><div class="txt"><div class="main" id="main"></div><div class="sub" id="sub"></div></div><div class="wk" id="wk"></div></div>
 <script>
-/* ---------- 公共：自动读取同一文件夹里的 Paper_shelf.html（PAPERS、TO_READ）和 Paper_heatmap.html（READ_DATES） ---------- */
+/* ---------- 公共：自动读取上一级文件夹（仓库根目录）里的 Paper_shelf.html（PAPERS、TO_READ）和 Paper_heatmap.html（READ_DATES） ---------- */
+const DATA_DIR = "../";   // 数据文件相对本文件的位置
 const Q = new URLSearchParams(location.search), STILL = Q.has("still");
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, "0");
@@ -92,13 +93,16 @@ function demoData(spec) {
 async function loadData() {
   if (Q.has("demo")) return demoData(Q.get("demo") || "12");
   const get = u => fetch(u + "?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.text() : "").catch(() => "");
-  const [s, h] = await Promise.all([get("./Paper_shelf.html"), get("./Paper_heatmap.html")]);
-  return buildData(grabArr(s, "PAPERS"), grabArr(h, "READ_DATES"), grabArr(s, "TO_READ"));
+  const shelf = new URL(DATA_DIR + "Paper_shelf.html", location.href), heat = new URL(DATA_DIR + "Paper_heatmap.html", location.href);
+  const [s, h] = await Promise.all([get(shelf.href), get(heat.href)]);
+  // PDF 路径是相对书架文件写的（papers/xxx.pdf），这里换算成完整地址
+  const fix = arr => arr.map(p => { if (p && p.pdf) try { return { ...p, pdf: new URL(p.pdf, shelf).href }; } catch (e) {} return p; });
+  return buildData(fix(grabArr(s, "PAPERS")), grabArr(h, "READ_DATES"), fix(grabArr(s, "TO_READ")));
 }
 let toastT; function toast(s, ms = 2600) { const t = $("toast"); if (!t) return; t.textContent = s; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), ms); }
 function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); if (!Q.has("demo")) localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
 
-/* 不用手动修改：自动读取同一文件夹里 Paper_shelf.html 和 Paper_heatmap.html 的阅读日期 */
+/* 不用手动修改：自动读取上一级文件夹（仓库根目录）里 Paper_shelf.html 和 Paper_heatmap.html 的阅读日期 */
 (async () => {
   const D = await loadData(), now = D.now;
   const todayN = D.perDay[D.T] || 0, bar = $("bar");

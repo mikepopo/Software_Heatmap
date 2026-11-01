@@ -109,7 +109,7 @@ const LISTENING_DATES = ["2026-10-12", "2026-10-13", "2026-10-14", "2026-10-16",
   let html,vals;
   if(view==='all'){html=item('study','单词','s')+SEP+item('practice','听力','p')+SEP+item('both','双修','b')+`<span class="legend">${lg('--c-s','单词','s')}${lg('--c-p','听力','p')}${lg('--c-b','双修','b')}</span>`;vals={s:S.s,p:S.p,b:S.b}}
   else if(view==='study'){html=item('study','单词','s')+SEP+item('fire','最长连续','ls')+`<span class="legend">${lg('--v-s','已完成','s')}${S.h?lg('--v-h','部分完成','h'):''}</span>`;vals={s:S.s,ls:S.ls}}
-  else{html=item('practice','p','听力','p')+SEP+item('fire','最长连续','lp')+`<span class="legend">${lg('--v-p','已完成','p')}</span>`;vals={p:S.p,lp:S.lp}}
+  else{html=item('practice','听力','p')+SEP+item('fire','最长连续','lp')+`<span class="legend">${lg('--v-p','已完成','p')}</span>`;vals={p:S.p,lp:S.lp}}
   $('stats').innerHTML=html;
   $('stats').querySelectorAll('strong[data-k]').forEach(el=>{const k=el.dataset.k;el.dataset.v=shown[k]??0;countTo(el,vals[k]);shown[k]=vals[k]});
   $('stats').querySelectorAll('.lg').forEach(l=>{l.addEventListener('mouseenter',()=>map.classList.add('dim-'+l.dataset.dim));l.addEventListener('mouseleave',()=>map.classList.remove('dim-'+l.dataset.dim))});

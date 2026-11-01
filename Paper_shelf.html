@@ -5,124 +5,199 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>论文书架</title>
 <style>
-:root{color-scheme:light dark;--ink:#2f3d52;--strong:#273245;--muted:#8d9bb0;--line:#dce4ef;--surface:#fff;--chip:#f2f5f9;
- --A:#3b6ea5;--B:#7a4fa0;--C:#3f8a5a;--D:#c8742c;--S:#8a6d4b}
-@media(prefers-color-scheme:dark){:root{--ink:#d8dee9;--strong:#f2f5f8;--muted:#9aa7ba;--line:#354255;--surface:#181d25;--chip:#273142}}
+:root{color-scheme:light dark;--ink:#2f3d52;--strong:#273245;--muted:#5d6b7f;--line:#dce4ef;--surface:#fff;--accent:#0f766e}
+@media(prefers-color-scheme:dark){:root{--ink:#d8dee9;--strong:#f2f5f8;--muted:#a3afc0;--line:#354255;--surface:#181d25;--accent:#5cc3b6}}
 *{box-sizing:border-box}
 html,body{margin:0;background:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px 12px;overflow:hidden}
-.top{display:flex;align-items:center;gap:10px;margin-bottom:9px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;overflow:hidden;box-shadow:0 1px 2px rgba(31,45,61,.04)}
+.top{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;min-width:0}
 h1{margin:0;font-size:18px;font-weight:800;color:var(--strong);white-space:nowrap;letter-spacing:.2px}
-.count{font-size:12.5px;color:var(--muted);white-space:nowrap}.count b{color:var(--strong);font-size:14px}
+.count{min-width:0;font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.count b{color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
 
-/* ---------- 场景 ---------- */
-.scene{position:relative;display:flex;gap:0;border-radius:10px;overflow:hidden;background:linear-gradient(#efe4cf,#e6d7bb);isolation:isolate;user-select:none}
-.side{position:relative;flex:0 0 var(--sideW);display:flex;flex-direction:column;justify-content:space-between;padding:10px 0 0 10px}
-.win{position:relative;width:calc(var(--sideW) - 26px);aspect-ratio:1.1;border-radius:6px 6px 3px 3px;overflow:hidden;box-shadow:0 0 0 4px #f8f1e4,0 0 0 6px #b99b74;margin:2px 0 0 4px}
-.sky{position:absolute;inset:0;transition:background 1.2s}
-.night .sky{background:linear-gradient(#141a33,#2a3361)}
-.dawn .sky{background:linear-gradient(#5a6aa8 0%,#f0a37a 70%,#ffd59a)}
-.day .sky{background:linear-gradient(#7cc2f2,#cfeaff)}
-.orb{position:absolute;border-radius:50%;transition:all 1.2s}
-.night .orb{width:16px;height:16px;right:16%;top:16%;background:#fff6d6;box-shadow:0 0 14px 3px rgba(255,246,214,.55),inset -5px -2px 0 #d9cfae}
-.dawn .orb{width:22px;height:22px;left:40%;top:62%;background:#ffd27a;box-shadow:0 0 22px 8px rgba(255,190,110,.7)}
-.day .orb{width:20px;height:20px;right:14%;top:14%;background:#fff3b0;box-shadow:0 0 26px 10px rgba(255,240,170,.8)}
-.star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;opacity:0;transition:opacity 1s}
-.night .star{opacity:.9;animation:tw 2.4s ease-in-out infinite}
-@keyframes tw{50%{opacity:.25}}
-.mull{position:absolute;inset:0;background:linear-gradient(90deg,transparent calc(50% - 1.5px),#f8f1e4 calc(50% - 1.5px) calc(50% + 1.5px),transparent 0),linear-gradient(transparent calc(50% - 1.5px),#f8f1e4 calc(50% - 1.5px) calc(50% + 1.5px),transparent 0)}
-.desk{position:relative;height:66px;margin-top:6px}
-.desk .top-b{position:absolute;left:-10px;right:-6px;bottom:22px;height:7px;background:linear-gradient(#a37a50,#87613c);border-radius:2px;box-shadow:0 2px 0 #6e4d2e}
-.desk .leg{position:absolute;bottom:0;width:6px;height:22px;background:#7a5636}
-.pile{position:absolute;left:2px;bottom:29px;width:42px;display:flex;flex-direction:column-reverse;align-items:flex-start;z-index:2}
-.fb{position:relative;display:block;flex:0 0 auto;width:var(--bw);height:var(--bh);margin-top:1px;border-radius:1.5px 3px 3px 1.5px;cursor:pointer;text-decoration:none;
- background:linear-gradient(90deg,var(--c) 0 calc(100% - 4px),#f3ead6 calc(100% - 4px));box-shadow:inset 0 -1px 0 rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.16);
+/* ---------- 场景：青绿夜读 · 暖灯书房 ---------- */
+.scene{--st:rgba(10,16,15,.62);position:relative;display:flex;border-radius:10px;overflow:hidden;isolation:isolate;user-select:none;-webkit-user-select:none;
+ background:radial-gradient(130% 120% at 26% 22%,#32574f 0,#284641 42%,#1c332f 100%)}
+.side{position:relative;flex:0 0 var(--sideW);min-width:0}
+.side::before{content:"";position:absolute;left:0;right:-8px;bottom:6px;height:5px;background:#1b2d2a;box-shadow:0 -1px 0 rgba(0,0,0,.22)}
+.side::after{content:"";position:absolute;left:0;right:-8px;bottom:0;height:6px;background:linear-gradient(#3c2a1f,#24180f)}
+
+/* 窗 */
+.win{position:absolute;left:var(--winL);top:var(--winT);width:var(--winW);height:var(--winH);padding:4px;border-radius:2px;
+ background:linear-gradient(135deg,#5b402e,#422e20);box-shadow:0 0 0 1px var(--st),0 8px 16px rgba(0,0,0,.28)}
+.win::after{content:"";position:absolute;left:calc(50% - 3.5px);top:52%;width:7px;height:5px;border-left:1.5px solid #b9a37c;border-right:1.5px solid #b9a37c;opacity:.75}
+.glass{position:relative;width:100%;height:100%;overflow:hidden;box-shadow:0 0 0 1px var(--st)}
+.glass::after{content:"";position:absolute;inset:0;background:linear-gradient(125deg,rgba(255,255,255,.07) 0 20%,transparent 20% 42%,rgba(255,255,255,.035) 42% 50%,transparent 50%)}
+.sky{position:absolute;inset:0;opacity:0;transition:opacity 1.2s}
+.sky.n{opacity:1;background:linear-gradient(#0b2327,#13373b 60%,#1a4446)}
+.sky.d{background:linear-gradient(#2d4b5a,#7d8583 52%,#d6ab84)}
+.sky.y{background:linear-gradient(#9dc5c3,#d9e9e2)}
+.dawn .sky.d,.day .sky.y{opacity:1}
+.mull{position:absolute;inset:0;--m:#4a3423;background:
+ linear-gradient(90deg,transparent calc(50% - 1.5px),var(--m) 0 calc(50% + 1.5px),transparent 0),
+ linear-gradient(transparent calc(33.3% - 1px),var(--m) 0 calc(33.3% + 1px),transparent 0),
+ linear-gradient(transparent calc(66.6% - 1px),var(--m) 0 calc(66.6% + 1px),transparent 0)}
+.orb{position:absolute;border-radius:50%;transition:opacity 1s}
+.night .orb{width:13px;height:13px;left:16%;top:11%;box-shadow:inset 4px -1px 0 0 #efe5c9;filter:drop-shadow(0 0 5px rgba(239,229,201,.45))}
+.dawn .orb{width:15px;height:15px;left:58%;top:66%;background:#f0c38f;box-shadow:0 0 14px 5px rgba(240,195,143,.45)}
+.day .orb{width:14px;height:14px;left:64%;top:13%;background:#fbf2d3;box-shadow:0 0 16px 6px rgba(251,242,211,.6)}
+.star{position:absolute;width:1.5px;height:1.5px;background:#f3ecd8;border-radius:50%;opacity:0;transition:opacity 1s}
+.night .star{opacity:.7;animation:tw 2.6s ease-in-out infinite}
+@keyframes tw{50%{opacity:.18}}
+.sill{position:absolute;left:calc(var(--winL) - 6px);top:calc(var(--winT) + var(--winH));width:calc(var(--winW) + 12px);height:5px;border-radius:1px;
+ background:linear-gradient(#7a5840,#5a3f2e);box-shadow:0 0 0 1px var(--st),0 4px 6px rgba(0,0,0,.3)}
+
+/* 书桌 */
+.desk{position:absolute;left:4%;right:6%;top:var(--deskY);bottom:6px}
+.slab{position:absolute;left:-5px;right:-5px;top:0;height:7px;border-radius:2px;background:linear-gradient(#74523b,#5a3e2c);box-shadow:0 0 0 1px var(--st),0 3px 0 rgba(0,0,0,.22)}
+.apron{position:absolute;left:3px;right:3px;top:7px;height:10px;background:linear-gradient(#4b3426,#3c2a1e);box-shadow:0 0 0 1px var(--st)}
+.leg{position:absolute;top:17px;bottom:0;width:6px;background:linear-gradient(90deg,#3c291d,#4e3627);box-shadow:0 0 0 1px var(--st)}
+.leg.l{left:7px}.leg.r{right:7px}
+.small .apron{height:8px}.small .leg{top:15px;width:5px}
+.obook{position:absolute;bottom:calc(100% - 1px);left:var(--bookL);width:60px;height:14px;display:block}
+.small .obook{width:30px;height:8px}
+.no-book .obook,.no-mug .mug{display:none}
+.mug{position:absolute;bottom:100%;left:var(--mugL);width:11px;height:13px;border-radius:1px 1px 3px 3px;background:linear-gradient(90deg,#22524b,#357268 45%,#1f4d47);box-shadow:0 0 0 1px var(--st)}
+.mug::before{content:"";position:absolute;left:1px;right:1px;top:1px;height:2px;border-radius:50%;background:#173a36}
+.mug::after{content:"";position:absolute;right:-5px;top:3px;width:5px;height:6px;border:1.5px solid #2b645c;border-left:0;border-radius:0 4px 4px 0}
+.small .mug{width:9px;height:11px}
+.pile{position:absolute;left:4%;bottom:100%;width:44px;display:flex;flex-direction:column-reverse;align-items:flex-start;z-index:2}
+.fb{position:relative;display:block;flex:0 0 auto;width:var(--bw);height:var(--bh);margin:1px 0 0;padding:0;border:0;border-radius:1px 2px 2px 1px;cursor:pointer;text-decoration:none;color:var(--t);font:inherit;
+ background:linear-gradient(90deg,var(--c) 0 calc(100% - 4px),#efe6cf calc(100% - 4px));box-shadow:0 0 0 1px var(--st),inset 0 1px 0 rgba(255,255,255,.14);
  transform:translateX(var(--dx)) rotate(var(--rt));transition:transform .18s;animation:land .5s cubic-bezier(.3,1.5,.5,1) both;animation-delay:calc(.15s + var(--i)*60ms)}
-.fb::after{content:"";position:absolute;left:3px;top:calc(50% - .5px);width:calc(100% - 11px);height:1px;background:var(--band,rgba(255,255,255,.35))}
+.fb::after{content:"";position:absolute;left:3px;top:calc(50% - .5px);width:calc(100% - 11px);height:1px;background:currentColor;opacity:.45}
 .fb:hover{transform:translateX(calc(var(--dx) + 4px)) rotate(var(--rt))}
-.more{flex:0 0 auto;margin:1px 0 0 6px;font-size:8.5px;line-height:11px;font-weight:800;font-style:normal;color:#fff;background:#e0533a;border-radius:4px;padding:0 3px;cursor:pointer;animation:bob2 1.8s ease-in-out infinite}
+.more{flex:0 0 auto;margin:2px 0 0 4px;padding:0 4px;border:0;border-radius:4px;font:inherit;font-size:12px;line-height:16px;font-weight:700;color:#2a2416;background:#e9c785;cursor:pointer;animation:bob2 1.8s ease-in-out infinite}
 @keyframes land{0%{transform:translate(var(--dx),-26px) rotate(var(--rt));opacity:0}100%{transform:translateX(var(--dx)) rotate(var(--rt));opacity:1}}
 @keyframes bob2{50%{transform:translateY(-2px)}}
-.lamp{position:absolute;right:6px;bottom:29px;width:46px;height:52px;cursor:pointer;overflow:visible}
-.cone{position:absolute;right:-24px;bottom:-4px;width:120px;height:70px;pointer-events:none;opacity:0;transition:opacity .8s;background:radial-gradient(ellipse at 62% 0%,rgba(255,225,150,.55),rgba(255,225,150,0) 70%);clip-path:polygon(48% 0,76% 0,100% 100%,10% 100%)}
-.lit .cone{opacity:1}
-.bulb{transition:fill .5s}
-.lit .bulb{fill:#ffe9a8;filter:drop-shadow(0 0 5px #ffd36b)}
-.lamp.flick{animation:flick .6s}
-@keyframes flick{20%,60%{opacity:.4}40%,80%{opacity:1}}
-.mug{position:absolute;left:44px;bottom:29px;width:10px;height:11px;background:#d8604a;border-radius:1px 1px 3px 3px}
-.mug::after{content:"";position:absolute;right:-4px;top:2px;width:4px;height:5px;border:1.5px solid #d8604a;border-left:0;border-radius:0 4px 4px 0}
 
-.case{position:relative;flex:1;min-width:0;margin:8px 8px 0 12px;padding:0 6px;background:linear-gradient(#6d4b2f,#5b3e26);border-radius:5px 5px 0 0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
-.row{position:relative;height:var(--rowH);display:flex;align-items:flex-end;gap:2px;padding:0 4px 7px;background:linear-gradient(#3a271a,#4a3322)}
-.row+.row{margin-top:0}
-.row::after{content:"";position:absolute;left:-6px;right:-6px;bottom:0;height:7px;background:linear-gradient(#9a7149,#7d5a37);box-shadow:0 2px 2px rgba(0,0,0,.25)}
-.row:first-child{margin-top:6px}
-.bk{position:relative;display:block;text-decoration:none;flex:0 0 var(--w);height:var(--h);border-radius:2px 2px 1px 1px;cursor:pointer;
- background:linear-gradient(90deg,rgba(0,0,0,.28),rgba(255,255,255,.14) 28%,rgba(255,255,255,0) 60%,rgba(0,0,0,.3)),var(--c);
- box-shadow:inset 0 0 0 .5px rgba(0,0,0,.25);transition:transform .18s ease,opacity .25s,filter .25s;transform-origin:bottom center;
+/* 台灯 */
+.lamp{position:absolute;bottom:100%;left:calc(var(--lampX) - 50px);width:72px;height:76px;margin:0;padding:0;border:0;background:none;cursor:pointer;z-index:3;transform-origin:50px 100%;-webkit-tap-highlight-color:transparent}
+.small .lamp{transform:scale(.72)}
+.lamp svg{display:block;overflow:visible}
+.cone,.halo{opacity:0;transition:opacity .8s;pointer-events:none}
+.lit .cone,.lit .halo{opacity:1}
+.mouth{fill:#222b2a;transition:fill .5s}
+#bulb{fill:#566060;transition:fill .5s}
+.lit .mouth{fill:#f3dfab}
+.lit #bulb{fill:#fff8e2}
+.lamp.flick{animation:flick .6s}
+@keyframes flick{20%,60%{opacity:.45}40%,80%{opacity:1}}
+
+/* 书柜 */
+.case{position:relative;flex:1;min-width:0;margin:0 10px 0 8px;padding:8px 7px 6px;z-index:1;
+ background:linear-gradient(90deg,#33241a,#4a3324 7px,#4a3324 calc(100% - 7px),#33241a);box-shadow:0 0 0 1px var(--st),-8px 0 16px rgba(0,0,0,.25)}
+.case::before{content:"";position:absolute;left:-4px;right:-4px;top:0;height:8px;background:linear-gradient(#6d4d37,#4f3626);box-shadow:0 0 0 1px var(--st),0 3px 4px rgba(0,0,0,.35);z-index:1}
+.case::after{content:"";position:absolute;left:-2px;right:-2px;bottom:0;height:6px;background:linear-gradient(#3a281d,#22170f);box-shadow:0 0 0 1px var(--st)}
+.rows{position:relative;background:repeating-linear-gradient(90deg,rgba(255,236,210,.022) 0 1px,transparent 1px 11px),linear-gradient(#291c14,#33241a 50%,#291c14);box-shadow:inset 0 0 0 1px var(--st)}
+.row{position:relative;height:var(--rowH);display:flex;align-items:flex-end;gap:var(--gap,2px);padding:0 6px 7px}
+.row::before{content:"";position:absolute;left:0;right:0;top:0;height:12px;background:linear-gradient(rgba(0,0,0,.34),transparent);pointer-events:none}
+.row::after{content:"";position:absolute;left:0;right:0;bottom:0;height:7px;background:linear-gradient(#7a573f,#5d412e 55%,#4a3223);box-shadow:0 0 0 .5px var(--st),0 1px 0 rgba(0,0,0,.45)}
+.bk{position:relative;display:block;flex:0 0 var(--w);height:var(--h);margin:0;padding:0;border:0;font:inherit;border-radius:1.5px 1.5px 1px 1px;cursor:pointer;text-decoration:none;color:var(--t);
+ background:linear-gradient(90deg,rgba(0,0,0,.22),rgba(255,255,255,.12) 30%,rgba(255,255,255,0) 62%,rgba(0,0,0,.24)),var(--c);
+ box-shadow:inset 0 0 0 1px rgba(12,16,15,.5);transition:transform .18s ease,opacity .25s,filter .25s;transform-origin:bottom center;
  animation:slide .45s cubic-bezier(.2,.9,.3,1.1) both;animation-delay:calc(var(--i)*22ms);filter:brightness(var(--br,1))}
-.bk::before,.bk::after{content:"";position:absolute;left:1px;right:1px;height:1.6px;background:var(--band,rgba(255,255,255,.35))}
-.bk::before{top:5px}.bk::after{bottom:5px}
-.bk span{position:absolute;inset:9px 0;writing-mode:vertical-rl;display:flex;align-items:center;justify-content:flex-start;overflow:hidden;white-space:nowrap;font-size:8px;line-height:1;color:rgba(255,255,255,.9);letter-spacing:.3px;text-shadow:0 1px 1px rgba(0,0,0,.35)}
+.bk::before,.bk::after{content:"";position:absolute;left:2px;right:2px;height:1px;background:currentColor;opacity:.5}
+.bk::before{top:5px;box-shadow:0 2px 0 currentColor}
+.bk::after{bottom:5px}
+.bk span{position:absolute;inset:11px 0 9px;writing-mode:vertical-rl;display:flex;align-items:center;justify-content:flex-start;overflow:hidden;white-space:nowrap;font-size:8px;line-height:1;letter-spacing:.4px;opacity:.8;pointer-events:none}
 .bk.thin span{display:none}
-.bk:hover{transform:translateY(-5px)}
+.bk:hover,.bk:focus-visible{transform:translateY(-5px)}
+.bk:focus-visible,.fb:focus-visible,.more:focus-visible{outline:2px solid #f3e2b3;outline-offset:1px}
+.lamp:focus-visible{outline:2px solid #f3e2b3;outline-offset:2px;border-radius:6px}
 .bk.out{transform:translateY(-12px) rotate(-2deg)}
-.bk.fade{opacity:.22;filter:saturate(.3)}
 .bk.new{animation:drop .9s cubic-bezier(.3,1.45,.5,1) both;animation-delay:calc(.5s + var(--k)*.25s)}
-.bk.new .tagnew{position:absolute;left:50%;top:-13px;transform:translateX(-50%);font-size:7.5px;font-weight:800;color:#fff;background:#e0533a;border-radius:3px;padding:0 2px;line-height:10px;animation:bob 1.6s ease-in-out infinite}
+.bk.new .tagnew{position:absolute;left:50%;top:-14px;transform:translateX(-50%);font-size:9px;font-weight:800;font-style:normal;color:#2a2416;background:#ecc983;border-radius:3px;padding:0 3px;line-height:12px;animation:bob 1.6s ease-in-out infinite}
 @keyframes slide{from{transform:translateY(-6px);opacity:0}}
 .bk.fly{z-index:7;animation:fly 1.25s cubic-bezier(.5,.05,.3,1) both;animation-delay:calc(.7s + var(--k)*.45s)}
 @keyframes fly{0%{transform:translate(var(--fx),var(--fy)) rotate(-90deg) scale(.92)}50%{transform:translate(calc(var(--fx)*.45),calc(var(--fy)*.45 - 46px)) rotate(-40deg) scale(1.08)}100%{transform:none}}
 @keyframes drop{0%{transform:translateY(-120px) rotate(-14deg);opacity:0}60%{opacity:1}100%{transform:none}}
 @keyframes bob{50%{transform:translate(-50%,-2px)}}
 
-.pend{position:absolute;top:0;width:2px;background:#444;opacity:0;transition:opacity .8s;pointer-events:none}
-.pend b{position:absolute;left:50%;bottom:-10px;transform:translateX(-50%);width:22px;height:12px;border-radius:11px 11px 3px 3px;background:#3d4450}
-.pend b::after{content:"";position:absolute;left:6px;bottom:-5px;width:10px;height:7px;border-radius:0 0 6px 6px;background:#fff2c4;box-shadow:0 4px 18px 6px rgba(255,226,150,.6)}
-.pend.on{opacity:1}
+/* 吊灯 */
+.pend{position:absolute;top:0;width:0;height:0;z-index:4;pointer-events:none}
+.pend .cord{position:absolute;left:-.5px;top:0;width:1px;height:var(--cordH);background:#121918}
+.pend .shade{position:absolute;left:-11px;top:var(--cordH);width:22px;height:11px;border-radius:11px 11px 2px 2px;background:linear-gradient(#58625f,#394341);box-shadow:0 0 0 1px var(--st)}
+.pend .bulb{position:absolute;left:-4.5px;top:calc(var(--cordH) + 10px);width:9px;height:5px;border-radius:0 0 5px 5px;background:#646c6a;transition:background .6s,box-shadow .6s}
+.pend .pool{position:absolute;left:-130px;top:calc(var(--cordH) + 12px);width:260px;height:120px;background:radial-gradient(ellipse at 50% 0,rgba(255,228,170,.24),rgba(255,228,170,0) 70%);opacity:0;transition:opacity .8s}
+.pend.on{z-index:6}
+.pend.on .bulb{background:#fff3cf;box-shadow:0 2px 10px 3px rgba(255,226,160,.55)}
+.pend.on .pool{opacity:1}
 
 .dark{position:absolute;inset:0;pointer-events:none;z-index:5;transition:background 1.4s}
-.tip{position:absolute;z-index:8;max-width:220px;background:rgba(24,28,38,.94);color:#eef2f7;border-radius:8px;padding:7px 9px;font-size:11px;line-height:1.5;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.grain{position:absolute;inset:0;pointer-events:none;z-index:7;opacity:.2;mix-blend-mode:soft-light;background-size:180px 180px;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='.33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E")}
+.tip{position:absolute;z-index:8;max-width:240px;background:rgba(13,25,24,.96);color:#f1ead6;border:1px solid rgba(241,234,214,.14);border-radius:8px;padding:8px 10px;font-size:14px;line-height:1.45;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;box-shadow:0 6px 18px rgba(0,0,0,.3)}
 .tip.show{opacity:1;transform:none}
-.tip b{font-size:12px;color:#fff;display:block;margin-bottom:1px}
-.tip .m{color:#b8c3d3}.tip .go{color:#ffd98a}
-.toast{position:absolute;z-index:9;left:50%;top:10px;transform:translate(-50%,-30px);background:#fff;color:#273245;font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.18);opacity:0;transition:all .45s cubic-bezier(.3,1.4,.5,1);white-space:nowrap}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-.empty{position:absolute;z-index:6;left:var(--sideW);right:0;top:42%;text-align:center;color:#e8dcc4;font-size:12px;opacity:.85;pointer-events:none}
+.tip b{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;margin-bottom:2px;font-weight:650;color:#fff8e6;word-break:break-word}
+.tip .m{color:#b8c6bf}.tip .go{color:#e9ca8e}
+.toast{position:absolute;z-index:9;left:12px;right:12px;top:10px;width:fit-content;max-width:calc(100% - 24px);margin:0 auto;transform:translateY(-30px);background:#f1ead6;color:#1f3a37;font-size:14px;font-weight:650;line-height:1.35;text-align:center;padding:6px 12px;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:0;transition:all .45s cubic-bezier(.3,1.4,.5,1)}
+.toast.show{opacity:1;transform:none}
+.toast span{display:inline-block}
+.empty{position:absolute;z-index:6;left:calc(var(--sideW) + 23px);right:25px;top:calc(8px + var(--rowH));height:calc(var(--rowH) - 7px);display:flex;flex-wrap:wrap;align-items:center;align-content:center;justify-content:center;text-align:center;color:#e9dfc6;font-size:14px;line-height:1.4;opacity:.92;pointer-events:none}
 
-@media(max-width:560px){h1{font-size:15px}}
+@media(max-width:560px){h1{font-size:15.5px}.card{padding:12px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <main class="card" id="root">
  <div class="top"><h1>📚 论文书架</h1><span class="count" id="count"></span></div>
- <div class="scene" id="scene">
+ <div class="scene night" id="scene">
   <div class="side" id="side">
-   <div class="win night" id="win"><div class="sky"></div><div class="orb"></div><div id="stars"></div><div class="mull"></div></div>
+   <div class="win" id="win" aria-hidden="true"><div class="glass"><div class="sky n"></div><div class="sky d"></div><div class="sky y"></div><div class="orb"></div><div id="stars"></div><div class="mull"></div></div></div>
+   <div class="sill" aria-hidden="true"></div>
    <div class="desk">
-    <div class="top-b"></div><div class="leg" style="left:-2px"></div><div class="leg" style="right:2px"></div>
-    <div class="pile" id="pile" title=""></div>
-    <div class="mug"></div>
-    <div class="lamp" id="lamp" title="台灯">
-     <div class="cone"></div>
-     <svg viewBox="0 0 46 52" width="46" height="52" aria-hidden="true">
-      <ellipse cx="34" cy="50" rx="10" ry="2.4" fill="#2f3440"/>
-      <path d="M34 49 L30 30 L14 16" stroke="#3a404c" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-      <circle cx="30" cy="30" r="2.2" fill="#3a404c"/>
-      <path d="M2 18 L16 6 L24 15 Z" fill="#2f6f62"/>
-      <ellipse class="bulb" cx="11" cy="18.5" rx="5" ry="2.2" fill="#7b7f86" transform="rotate(-40 11 18.5)"/>
+    <div class="slab"></div><div class="apron"></div><div class="leg l"></div><div class="leg r"></div>
+    <svg class="obook" viewBox="0 0 60 14" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+     <path d="M1 12.4 L1.4 13.4 C10.5 11.7 21 11.9 30 14 C39 11.9 49.5 11.7 58.6 13.4 L59 12.4" fill="#cfc3a4" stroke="#151c1b" stroke-width=".6"/>
+     <path d="M30 3.6 C23 1.2 12 1 3.5 2.6 L1 12.4 C10.5 10.6 21 10.8 30 13.2 C39 10.8 49.5 10.6 59 12.4 L56.5 2.6 C48 1 37 1.2 30 3.6 Z" fill="#ece3cb" stroke="#151c1b" stroke-width=".8" stroke-linejoin="round"/>
+     <path d="M30 3.6 V13.2" stroke="#151c1b" stroke-width=".6"/>
+     <path d="M8 5 C14 4.2 20 4.3 26 5.4 M7.6 7 C13.6 6.2 19.6 6.3 25.6 7.4 M7.2 9 C13.2 8.2 19.2 8.3 25.2 9.4 M34 5.4 C40 4.3 46 4.2 52 5 M34.4 7.4 C40.4 6.3 46.4 6.2 52.4 7 M34.8 9.4 C40.8 8.3 46.8 8.2 52.8 9" stroke="#b1a587" stroke-width=".5" fill="none"/>
+    </svg>
+    <div class="mug" aria-hidden="true"></div>
+    <div class="pile" id="pile"></div>
+    <button type="button" class="lamp" id="lamp" title="台灯" aria-label="台灯：查看房间点亮进度">
+     <svg width="72" height="76" viewBox="0 0 72 76" aria-hidden="true" focusable="false">
+      <defs>
+       <linearGradient id="lcg" gradientUnits="userSpaceOnUse" x1="21.5" y1="26.6" x2="-23.5" y2="76"><stop offset="0" stop-color="#ffe8b6" stop-opacity=".5"/><stop offset="1" stop-color="#ffe8b6" stop-opacity=".07"/></linearGradient>
+       <radialGradient id="lpg"><stop offset="0" stop-color="#ffe4a8" stop-opacity=".55"/><stop offset="1" stop-color="#ffe4a8" stop-opacity="0"/></radialGradient>
+       <radialGradient id="lhg"><stop offset="0" stop-color="#fff0c8" stop-opacity=".9"/><stop offset=".4" stop-color="#ffdf9a" stop-opacity=".35"/><stop offset="1" stop-color="#ffdf9a" stop-opacity="0"/></radialGradient>
+       <filter id="lsoft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.4"/></filter>
+      </defs>
+      <g class="cone">
+       <path d="M13.4 20.9 L29.7 32.4 L18 76 L-65 76 Z" fill="url(#lcg)" filter="url(#lsoft)"/>
+       <ellipse cx="-23" cy="75.5" rx="46" ry="6" fill="url(#lpg)"/>
+      </g>
+      <g fill="none" stroke-linecap="round">
+       <path d="M51.1 70.4 L64.1 39.4 M48.9 69.6 L61.9 38.6" stroke="#2f3a3a" stroke-width="1.3"/>
+       <path d="M53.5 63 L59.5 48.5" stroke="#7b8483" stroke-width=".8" stroke-dasharray="1 .8"/>
+       <path d="M63.6 38.1 L32.6 16.1 M62.4 39.9 L31.4 17.9" stroke="#2f3a3a" stroke-width="1.3"/>
+       <path d="M56 31.5 L44 23" stroke="#7b8483" stroke-width=".8" stroke-dasharray="1 .8"/>
+      </g>
+      <path d="M39 75 C39.5 70 60.5 70 61 75 Z" fill="#3c4a4a" stroke="#151c1b" stroke-width="1"/>
+      <path d="M37.5 75.4 H62.5" stroke="#151c1b" stroke-width="1.2" stroke-linecap="round"/>
+      <circle cx="50" cy="70" r="1.9" fill="#4a5858" stroke="#151c1b" stroke-width=".9"/>
+      <circle cx="63" cy="39" r="2.3" fill="#4a5858" stroke="#151c1b" stroke-width=".9"/>
+      <circle cx="32" cy="17" r="2" fill="#4a5858" stroke="#151c1b" stroke-width=".9"/>
+      <circle class="halo" cx="22" cy="26" r="14" fill="url(#lhg)"/>
+      <g transform="translate(29 16) rotate(35)">
+       <path d="M-4 -2 H4 L4.6 2 L10 12.6 Q0 15.4 -10 12.6 L-4.6 2 Z" fill="#415050" stroke="#151c1b" stroke-width="1" stroke-linejoin="round"/>
+       <path d="M-3.4 2.6 L-8.3 11.6" stroke="#9fb0ab" stroke-opacity=".35" stroke-width=".8" stroke-linecap="round"/>
+       <ellipse class="mouth" cx="0" cy="13.1" rx="9.4" ry="1.9"/>
+       <ellipse id="bulb" cx="0" cy="12.6" rx="4.6" ry="2.2"/>
+      </g>
      </svg>
-    </div>
+    </button>
    </div>
   </div>
-  <div class="case" id="case"></div>
-  <div class="pend" id="pend"><b></b></div>
+  <div class="case"><div class="rows" id="case"></div></div>
+  <div class="pend" id="pend" aria-hidden="true"><i class="cord"></i><i class="pool"></i><i class="shade"></i><i class="bulb"></i></div>
   <div class="dark" id="dark"></div>
+  <div class="grain" aria-hidden="true"></div>
   <div class="empty" id="empty"></div>
-  <div class="tip" id="tip"></div>
-  <div class="toast" id="toast"></div>
+  <div class="tip" id="tip" role="tooltip"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
  </div>
 </main>
 <script>
@@ -139,9 +214,12 @@ const TO_READ = [
 ];
 /* ===================================================================== */
 const TARGET = 100;   // 读满 100 篇，房间全亮
-const COLORS = ["#8e3b3b", "#2f4a6d", "#3d6b4f", "#b5862f", "#6a4a78", "#2f6e70", "#7a5638", "#4f5b6b", "#7d2e46", "#6b6a35", "#3b5f8a", "#9a5a2e"];
+/* 书脊配色：象牙、米白、灰绿、石板、青绿（[书脊色, 线条与字色]） */
+const PALETTE = [["#e9e1ca", "#4e4738"], ["#d8cdb0", "#4d4535"], ["#bccaae", "#334033"], ["#93a991", "#22301f"], ["#6e8a7d", "#efe7d2"], ["#5b6b70", "#ebe4cf"],
+  ["#46565d", "#e3dcc6"], ["#3c7e76", "#efe7d2"], ["#2a625e", "#e6dec7"], ["#4f8e7f", "#f1e9d3"], ["#2f4a49", "#d9d1b8"], ["#a6ab9c", "#30352d"]];
 const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
 const hash = s => { let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 let list = PAPERS.filter(p => p && p.title).map((p, i) => ({ ...p, ord: i }));
 let desk = TO_READ.filter(p => p && p.title).map((p, i) => ({ ...p, ord: i }));
 if (q.has("demo")) { const n = +q.get("demo") || 0, m = +q.get("desk") || 0; list = Array.from({ length: n }, (_, i) => ({ title: "Paper " + (i + 1), pdf: "", date: "", ord: i }));
@@ -163,34 +241,41 @@ try { if (!q.has("demo")) localStorage.setItem("shelf-desk", JSON.stringify(desk
 
 function layout() {
   const sc = $("scene"), W = sc.clientWidth, small = W < 520;
-  const sideW = small ? 86 : 128, rowH = small ? 56 : 64;
+  const sideW = small ? clamp(Math.round(W * .36), 112, 190) : clamp(Math.round(W * .36), 200, 330), rowH = small ? 56 : 64;
+  sc.classList.toggle("small", small);
   sc.style.setProperty("--sideW", sideW + "px"); sc.style.setProperty("--rowH", rowH + "px");
-  const caseW = W - sideW - 20 - 12 - 8;                     // 书柜内宽
-  const inner = caseW - 12 - 8;
-  const WOF = b => (small ? 12 : 16) + hash(b.title) % (small ? 3 : 4);
-  const rows = [[]]; let x = 0;
-  list.forEach(b => { const w = WOF(b); if (x + w > inner && rows[rows.length - 1].length) { rows.push([]); x = 0; } rows[rows.length - 1].push(b); x += w + 2; });
-  while (rows.length < 3) rows.push([]);
   const cs = $("case"); cs.innerHTML = "";
+  const inner = cs.clientWidth - 12;                          // 书架一层的内宽
+  const base = list.map(b => (small ? 12 : 16) + hash(b.title) % (small ? 3 : 4)), sum = base.reduce((s, w) => s + w, 0);
+  // 书多了先把书挤一挤（书脊变薄），尽量保持三层书架；实在放不下再加一层
+  const f = sum + list.length * 2 > 3 * inner ? Math.max(.5, (3 * inner - list.length) / sum * .98) : 1, gap = f < 1 ? 1 : 2;
+  const wid = base.map(w => Math.max(8, Math.floor(w * f)));
+  cs.style.setProperty("--gap", gap + "px");
+  const rows = [[]]; let x = 0;
+  list.forEach((b, j) => { const w = wid[j]; if (x + w > inner && rows[rows.length - 1].length) { rows.push([]); x = 0; } rows[rows.length - 1].push(j); x += w + gap; });
+  while (rows.length < 3) rows.push([]);
   let i = 0;
   rows.forEach(r => {
     const row = document.createElement("div"); row.className = "row";
-    r.forEach(b => {
-      const h = hash(b.title), el = document.createElement(b.pdf ? "a" : "b"), w = WOF(b);
-      if (b.pdf) { el.href = encodeURI(b.pdf); el.target = "_blank"; el.rel = "noopener"; }
-      el.className = "bk";
-      el.style.cssText = `--w:${w}px;--h:${rowH - 14 - (h % 9)}px;--c:${COLORS[h % COLORS.length]};--br:${(0.9 + (h % 17) / 100).toFixed(2)};--i:${i}`;
-      const k = n - 1 - list.indexOf(b);
+    r.forEach(j => {
+      const b = list[j], h = hash(b.title), el = document.createElement(b.pdf ? "a" : "button"), w = wid[j], [c, t] = PALETTE[h % PALETTE.length];
+      if (b.pdf) { el.href = encodeURI(b.pdf); el.target = "_blank"; el.rel = "noopener"; } else el.type = "button";
+      el.className = w < 11 ? "bk thin" : "bk";
+      el.setAttribute("aria-label", `${b.title}，${b.date ? b.date + " 读完" : "日期未记录"}${b.pdf ? "，打开 PDF" : ""}`);
+      el.style.cssText = `--w:${w}px;--h:${rowH - 14 - (h % 9)}px;--c:${c};--t:${t};--br:${(0.9 + (h % 17) / 100).toFixed(2)};--i:${i}`;
+      const k = n - 1 - j;
       if (flown.has(b.title)) el.classList.add("fly");
-      else if (k < fresh) { el.classList.add("new"); el.style.setProperty("--k", fresh - 1 - k); el.innerHTML = `<i class="tagnew">NEW</i>`; }
-      el.insertAdjacentHTML("beforeend", `<span>${esc(b.title)}</span>`);
-      el.dataset.idx = list.indexOf(b);
+      else if (k < fresh) { el.classList.add("new"); el.style.setProperty("--k", fresh - 1 - k); el.innerHTML = `<i class="tagnew" aria-hidden="true">NEW</i>`; }
+      el.insertAdjacentHTML("beforeend", `<span aria-hidden="true">${esc(b.title)}</span>`);
+      el.dataset.idx = j;
       row.appendChild(el); i++;
     });
     cs.appendChild(row);
   });
-  // 吊灯放在书柜正上方居中
-  const pend = $("pend"); pend.style.left = (sideW + 20 + caseW / 2) + "px"; pend.style.height = "10px";
+  room(sideW, small);
+  // 吊灯挂在书柜正上方居中
+  const box = cs.parentElement, pend = $("pend");
+  pend.style.left = (box.offsetLeft + box.offsetWidth / 2) + "px"; pend.style.setProperty("--cordH", (small ? 12 : 16) + "px");
   pend.classList.toggle("on", n >= 20);
   light();
   // 从书桌飞上书架：起点 = 书桌上那摞书的顶部
@@ -200,72 +285,93 @@ function layout() {
     el.addEventListener("animationend", () => { el.style.animation = "none"; el.classList.remove("fly"); }, { once: true }); });
 }
 
+/* 左侧房间：窗、书桌的位置随宽度自适应 */
+function room(S, small) {
+  const sc = $("scene"), H = sc.clientHeight, deskY = H - 6 - (small ? 42 : 54), dw = S * .9, k = small ? .72 : 1;
+  // 台灯在书桌右侧；摊开的书和杯子跟着灯走，让暖光正好落在书上；书桌左侧留给待读的那摞书
+  const lampX = dw * .84, pileR = dw * .04 + (small ? 30 : 41), bookW = small ? 30 : 60, mugW = small ? 14 : 16, baseL = lampX - 11 * k;
+  const bookL = clamp(lampX - 73.5 * k - bookW / 2, pileR + 6, baseL - 6 - bookW), gap = baseL - bookL - bookW;
+  sc.classList.toggle("no-book", bookL < pileR + 5); sc.classList.toggle("no-mug", gap < mugW + 10);
+  const winW = Math.round(Math.min(S * (small ? .48 : .38), small ? 78 : 126));
+  const winL = Math.round(small ? S * .13 : Math.max(S * .16, S * .076 + 49));        // 窗户避开书桌上那摞书
+  const winT = small ? 12 : 14, winH = Math.round(Math.max(36, Math.min(winW * 1.12, small ? deskY - 41 - winT : deskY - 40)));
+  Object.entries({ "--deskY": deskY, "--winW": winW, "--winH": winH, "--winT": winT, "--winL": winL, "--lampX": lampX, "--bookL": bookL, "--mugL": bookL + bookW + (gap - mugW) / 2 })
+    .forEach(([k, v]) => sc.style.setProperty(k, Math.round(v) + "px"));
+}
+
 function light() {
-  const sc = $("scene").getBoundingClientRect(), lamp = $("lamp").getBoundingClientRect(), win = $("win").getBoundingClientRect();
-  const lx = lamp.left - sc.left + 10, ly = lamp.top - sc.top + 16, wx = win.left - sc.left + win.width / 2, wy = win.top - sc.top + win.height / 2;
-  const D = "12,14,24", a = (0.64 * (1 - p * 0.92)).toFixed(3), R = 150 + p * sc.width * 1.2;
+  const sc = $("scene").getBoundingClientRect(), bulb = $("bulb").getBoundingClientRect(), win = $("win").getBoundingClientRect();
+  const lx = bulb.left - sc.left + bulb.width / 2, ly = bulb.top - sc.top + bulb.height / 2, wx = win.left - sc.left + win.width / 2, wy = win.top - sc.top + win.height / 2;
+  const D = "5,14,15", a = (0.66 * (1 - p * 0.92)).toFixed(3), R = 150 + p * sc.width * 1.2;
   const g = [];
-  if (n > 0) g.push(`radial-gradient(circle at ${lx}px ${ly}px, rgba(255,214,140,.16) 0, rgba(${D},0) ${R * 0.35}px, rgba(${D},${a}) ${R}px)`);
-  else g.push(`radial-gradient(circle at ${wx}px ${wy}px, rgba(${D},.35) 0, rgba(${D},.74) 120px)`);
-  if (n >= 20) { const px = parseFloat($("pend").style.left), R2 = 60 + (p - .2) * sc.width; g.unshift(`radial-gradient(circle at ${px}px 18px, rgba(255,230,160,.12) 0, rgba(${D},0) ${R2}px)`); }
+  if (n > 0) g.push(`radial-gradient(circle at ${lx}px ${ly}px, rgba(255,214,150,.10) 0, rgba(${D},0) ${R * 0.35}px, rgba(${D},${a}) ${R}px)`);
+  else g.push(`radial-gradient(circle at ${wx}px ${wy}px, rgba(${D},.30) 0, rgba(${D},.72) 130px)`);
+  if (n >= 20) { const px = parseFloat($("pend").style.left), R2 = 60 + (p - .2) * sc.width; g.unshift(`radial-gradient(circle at ${px}px 26px, rgba(255,230,160,.10) 0, rgba(${D},0) ${R2}px)`); }
   $("dark").style.background = g.join(",");
   $("side").classList.toggle("lit", n > 0);
-  $("win").className = "win " + (p >= .8 ? "day" : p >= .4 ? "dawn" : "night");
-  $("empty").textContent = n ? "" : "放上第一篇论文，台灯就会亮起来";
+  const s = $("scene").classList; s.remove("night", "dawn", "day"); s.add(p >= .8 ? "day" : p >= .4 ? "dawn" : "night");
+  $("empty").innerHTML = n ? "" : "<span>放上第一篇论文，</span><span>台灯就会亮起来</span>";
 }
 
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
-const DESK_MAX = 8;
 function header() {
   $("count").innerHTML = `已上架 <b>${n}</b> 篇 · 书桌待读 <b>${m}</b>`;
-  const small = $("scene").clientWidth < 520, show = desk.slice(0, DESK_MAX);
-  $("pile").innerHTML = show.map((b, i) => { const h = hash(b.title), tag = b.pdf ? "a" : "b";
-    return `<${tag} class="fb" data-d="${i}" ${b.pdf ? `href="${encodeURI(b.pdf)}" target="_blank" rel="noopener"` : ""} style="--bw:${(small ? 21 : 29) + h % (small ? 6 : 9)}px;--bh:${5 + h % 3}px;--c:${COLORS[h % COLORS.length]};--dx:${h % 5}px;--rt:${(h % 5) - 2}deg;--i:${i}"></${tag}>`; }).join("")
-    + (m > DESK_MAX ? `<i class="more" id="more">+${m - DESK_MAX}</i>` : "");
-  const st = $("stars"); st.innerHTML = Array.from({ length: 9 }, (_, i) => `<i class="star" style="left:${8 + (i * 37) % 80}%;top:${8 + (i * 53) % 70}%;animation-delay:${(i * .37) % 2}s"></i>`).join("");
+  const small = $("scene").clientWidth < 520, DESK_MAX = small ? 4 : 8, show = desk.slice(0, DESK_MAX);
+  $("pile").innerHTML = show.map((b, i) => { const h = hash(b.title), [c, t] = PALETTE[h % PALETTE.length], lab = esc(`${b.title}，待读${b.pdf ? "，打开 PDF" : ""}`);
+    const st = `--bw:${(small ? 21 : 29) + h % (small ? 6 : 9)}px;--bh:${(small ? 5 : 6) + h % 3}px;--c:${c};--t:${t};--dx:${h % 5}px;--rt:${(h % 5) - 2}deg;--i:${i}`;
+    return b.pdf ? `<a class="fb" data-d="${i}" href="${encodeURI(b.pdf)}" target="_blank" rel="noopener" aria-label="${lab}" style="${st}"></a>`
+      : `<button type="button" class="fb" data-d="${i}" aria-label="${lab}" style="${st}"></button>`; }).join("")
+    + (m > DESK_MAX ? `<button type="button" class="more" id="more" aria-label="书桌上共有 ${m} 篇待读">+${m - DESK_MAX}</button>` : "");
+  const stz = $("stars"); stz.innerHTML = Array.from({ length: 9 }, (_, i) => `<i class="star" style="left:${8 + (i * 37) % 80}%;top:${8 + (i * 53) % 70}%;animation-delay:${(i * .37) % 2}s"></i>`).join("");
 }
 
+function place(tip, x, y) { const sc = $("scene").getBoundingClientRect(); tip.style.left = Math.max(6, Math.min(sc.width - tip.offsetWidth - 6, x)) + "px"; tip.style.top = Math.max(4, y) + "px"; }
 function showTip(el) {
   const b = list[+el.dataset.idx], sc = $("scene").getBoundingClientRect(), r = el.getBoundingClientRect(), tip = $("tip");
   tip.innerHTML = `<b>${esc(b.title)}</b><span class="m">📅 ${b.date || "日期未记录"}</span>${b.pdf ? `<br><span class="go">📄 点击打开 PDF</span>` : ""}`;
   tip.classList.add("show");
   const tw = tip.offsetWidth, th = tip.offsetHeight;
-  let x = r.left - sc.left + r.width / 2 - tw / 2; x = Math.max(6, Math.min(sc.width - tw - 6, x));
   let y = r.top - sc.top - th - 8; if (y < 4) y = r.bottom - sc.top + 6;
-  tip.style.left = x + "px"; tip.style.top = y + "px";
+  place(tip, r.left - sc.left + r.width / 2 - tw / 2, y);
 }
 function hideTip() { if (!pinned) $("tip").classList.remove("show"); }
 function showDeskTip(el) {
   const b = desk[+el.dataset.d], sc = $("scene").getBoundingClientRect(), r = el.getBoundingClientRect(), tip = $("tip");
   tip.innerHTML = `<b>${esc(b.title)}</b><span class="m">📌 待读${b.date ? " · " + b.date + " 放上书桌" : ""}</span>${b.pdf ? `<br><span class="go">📄 点击打开 PDF</span>` : ""}`;
   tip.classList.add("show");
-  const tw = tip.offsetWidth, th = tip.offsetHeight;
-  tip.style.left = Math.max(6, Math.min(sc.width - tw - 6, r.right - sc.left + 8)) + "px";
-  tip.style.top = Math.max(4, r.top - sc.top - th / 2) + "px";
+  place(tip, r.right - sc.left + 8, r.top - sc.top - tip.offsetHeight / 2);
 }
 
 $("case").addEventListener("mouseover", e => { const el = e.target.closest(".bk"); if (el && !pinned) showTip(el); });
 $("case").addEventListener("mouseout", e => { if (e.target.closest(".bk") && !e.relatedTarget?.closest?.(".bk")) hideTip(); });
+$("case").addEventListener("focusin", e => { const el = e.target.closest(".bk"); if (el) showTip(el); });
+$("case").addEventListener("focusout", hideTip);
 $("case").addEventListener("click", e => {
   const el = e.target.closest(".bk"); if (!el) return;
   el.classList.add("out"); setTimeout(() => el.classList.remove("out"), 450);
   if (!list[+el.dataset.idx].pdf) toast("这本还没有 PDF");
 });
-$("lamp").addEventListener("click", () => { const l = $("lamp"); l.classList.remove("flick"); void l.offsetWidth; l.classList.add("flick"); toast(n ? `💡 房间已点亮 ${Math.round(p * 100)}%，继续读，会更亮` : "🌑 还没摸到开关：放上第一篇试试"); });
+const STEPS = [[20, "书柜吊灯就会亮"], [Math.ceil(TARGET * .4), "窗外就会破晓"], [Math.ceil(TARGET * .8), "天就大亮了"], [TARGET, "房间就全亮了"]];
+$("lamp").addEventListener("click", () => { const l = $("lamp"), nx = STEPS.find(([k]) => n < k); l.classList.remove("flick"); void l.offsetWidth; l.classList.add("flick");
+  toast(n ? `💡 房间已点亮 ${Math.round(p * 100)}%` + (nx ? `，再读 ${nx[0] - n} 篇，${nx[1]}` : "，满室灯火") : "🌑 还没摸到开关：放上第一篇试试"); });
 $("pile").addEventListener("mouseover", e => { const el = e.target.closest(".fb"); if (el) showDeskTip(el); });
 $("pile").addEventListener("mouseout", e => { if (e.target.closest(".fb") && !e.relatedTarget?.closest?.(".fb")) hideTip(); });
+$("pile").addEventListener("focusin", e => { const el = e.target.closest(".fb"); if (el) showDeskTip(el); });
+$("pile").addEventListener("focusout", hideTip);
 $("pile").addEventListener("click", e => { const el = e.target.closest(".fb");
   if (el) { if (!desk[+el.dataset.d].pdf) toast("这篇还没有 PDF"); return; }
   if (e.target.closest(".more")) toast(`📌 书桌上还有 ${m} 篇待读`); });
 
-let tt; function toast(s) { const t = $("toast"); t.textContent = s; t.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("show"), 2600); }
+let tt; function toast(s) { const t = $("toast"); t.innerHTML = s.split(/(?<=[，：])/).map(x => `<span>${esc(x)}</span>`).join(""); t.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("show"), 2600); }
 
 header(); layout();
 if (q.has("still")) document.querySelectorAll(".bk,.fb").forEach(b => b.style.animation = "none");
 if (flown.size) setTimeout(() => toast(`✅ 读完上架${flown.size === 1 ? "：" + [...flown][0] : " " + flown.size + " 篇"}`), 900);
 else if (fresh) setTimeout(() => toast(`📚 新上架 ${fresh} 篇${fresh === 1 ? "：" + list[n - 1].title : ""}`), 700);
-let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { layout(); document.querySelectorAll(".bk").forEach(b => b.style.animation = "none"); }, 120); });
+let rz, wasSmall = $("scene").clientWidth < 520;
+addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { const s = $("scene").clientWidth < 520; if (s !== wasSmall) { wasSmall = s; header(); }
+  layout(); document.querySelectorAll(".bk,.fb").forEach(b => b.style.animation = "none"); }, 120); });
 </script>
 </body>
 </html>

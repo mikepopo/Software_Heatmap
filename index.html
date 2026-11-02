@@ -51,7 +51,7 @@
 /* 由每日打卡维护这两个数组。日期格式 YYYY-MM-DD；更新时必须保留已有日期。
    COMPLETED_DATES：学习完成的日期；PRACTICE_DATES：练习完成的日期。
    同一天学习和练习都完成，会在「全部」视图里显示成深蓝色「双修」。 */
-const COMPLETED_DATES = ["2026-10-17", "2026-10-18", "2026-10-19", "2026-10-21", "2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26", "2026-10-27", "2026-10-29", "2026-10-30", "2026-10-31", "2026-11-01"];
+const COMPLETED_DATES = ["2026-10-17", "2026-10-18", "2026-10-19", "2026-10-21", "2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26", "2026-10-27", "2026-10-29", "2026-10-30", "2026-10-31", "2026-11-01", "2026-11-02"];
 const PRACTICE_DATES = ["2026-10-09", "2026-10-10", "2026-10-11", "2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17", "2026-10-18", "2026-10-19", "2026-10-20", "2026-10-21", "2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26", "2026-10-27", "2026-10-28", "2026-10-29", "2026-10-30", "2026-10-31", "2026-11-01", "2026-11-02"];
 (()=>{
  const CELL=12,GAP=4,LABEL_WIDTH=46,TOP_ROW_HEIGHT=20,FIRST_YEAR=2020,LAST_YEAR=2035;
@@ -80,9 +80,9 @@ const PRACTICE_DATES = ["2026-10-09", "2026-10-10", "2026-10-11", "2026-10-12", 
   const jan1=utcDate(y,0,1),first=utcDate(y,0,1-dayIndex(jan1)),dec31=utcDate(y,11,31),last=utcDate(y,11,31+(6-dayIndex(dec31)));
   const weeks=Math.round((last-first)/604800000)+1,gridWidth=LABEL_WIDTH+weeks*(CELL+GAP),gridHeight=TOP_ROW_HEIGHT+7*(CELL+GAP),map=$('heatmap');map.innerHTML='';
   [['--week-count',weeks],['--cell',CELL+'px'],['--gap',GAP+'px'],['--grid-width',gridWidth+'px'],['--base-height',gridHeight+'px']].forEach(([k,v])=>map.style.setProperty(k,String(v)));
-  $('heatmap-wrap').style.setProperty('--grid-width',gridWidth+'px');$('heatmap-wrap').style.setProperty('--base-height',gridHeight+'px');map.setAttribute('aria-label',y+' 年Software学习热力图');
+ $('heatmap-wrap').style.setProperty('--grid-width',gridWidth+'px');$('heatmap-wrap').style.setProperty('--base-height',gridHeight+'px');map.setAttribute('aria-label',y+' 年Software学习热力图');
   for(let month=0;month<12;month++){const date=utcDate(y,month,1),week=Math.floor((date-first)/604800000),label=document.createElement('div');label.className='month-label';label.textContent=(month+1)+'月';label.style.gridColumn=String(week+2);label.style.gridRow='1';map.appendChild(label)}
-  [['周一',2],['周三',4],['周五',6]].forEach(([text,row])=>{const label=document.createElement('div');label.className='weekday';label.textContent=text;label.style.gridColumn='1';label.style.gridRow=String(row);map.appendChild(label)});
+  [['周一',2],['周三',4],['周五',6]].forEach(([text,row])=>{const label=document.createElement('div');label.className='weekday';label.textContent=text;label.style.gridColumn='1';label.style.gridRow=String(row);map.appendChild(label)})
   const today=toISO(utcDate(now.getFullYear(),now.getMonth(),now.getDate()));
   for(let i=0;i<weeks*7;i++){const date=new Date(first);date.setUTCDate(first.getUTCDate()+i);const key=toISO(date),week=Math.floor(i/7),row=dayIndex(date)+2,inYear=date.getUTCFullYear()===y,cell=document.createElement('div');
    cell.className='day-cell';cell.style.gridColumn=String(week+2);cell.style.gridRow=String(row);cell.style.setProperty('--d',(week*9)+'ms');

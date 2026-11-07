@@ -109,7 +109,7 @@ const PRACTICE_DATES = ["2026-10-09", "2026-10-10", "2026-10-11", "2026-10-12", 
   let html,vals;
   if(view==='all'){html=item('study','学习','s')+SEP+item('practice','练习','p')+SEP+item('both','双修','b')+`<span class="legend">${lg('--c-s','学习','s')}${lg('--c-p','练习','p')}${lg('--c-b','双修','b')}</span>`;vals={s:S.s,p:S.p,b:S.b}}
   else if(view==='study'){html=item('study','学习','s')+SEP+item('fire','最长连续','ls')+`<span class="legend">${lg('--v-s','已完成','s')}</span>`;vals={s:S.s,ls:S.ls}}
-  else{html=item('practice','练习','p')+SEP+item('fire','最长连续','lp')+`<span class="legend">${lg('--v-p','已练习','p')}</span>`;vals={p:S.p,lp:S.lp}}
+  else{html=item('practice','练习','p')+SEP+item('fire','最长连续','lp')+`<span class="legend">${lg('--v-p','已练习','p')}</span>`;vals={p:S.p,lp:S.ls}}
   $('stats').innerHTML=html;
   $('stats').querySelectorAll('strong[data-k]').forEach(el=>{const k=el.dataset.v||0;el.dataset.v=k;countTo(el,vals[k]);shown[k]=vals[k]});
   $('stats').querySelectorAll('.lg').forEach(l=>{l.addEventListener('mouseenter',()=>map.classList.add('dim-'+l.dataset.dim));l.addEventListener('mouseleave',()=>map.classList.remove('dim-'+l.dataset.dim))});

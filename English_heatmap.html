@@ -98,7 +98,7 @@ const LISTENING_DATES = ["2026-10-12", "2026-10-13", "2026-10-14", "2026-10-16",
 
  const shown={};
  function countTo(el,to){const from=+el.dataset.v||0;el.dataset.v=to;if(from===to){el.textContent=to;return}const t0=performance.now(),dur=450;
-  const step=t=>{const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=Math.round(from+(to-from)*e);if(k<1)requestAnimationFrame(step)};requestAnimation frame(step)}
+  const step=t=>{const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=Math.round(from+(to-from)*e);if(k<1)requestAnimationFrame(step)};requestAnimation Frame(step)}
  function item(icon,label,key,val){return `<span class="stat-item"><span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${ICON[icon]}</svg></span><span>${label} <strong data-k="${key}">${shown[key]??0}</strong> 天</span></span>`}
  function lg(color,label,dim){return `<span class="lg" data-dim="${dim}"><i style="background:var(${color})"></i>${label}</span>`}
  function applyView(animate){

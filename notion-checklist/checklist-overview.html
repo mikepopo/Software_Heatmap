@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>今日总览与每日打卡 · 每日清单</title>
+<link rel="stylesheet" href="checklist-widgets.css">
+<script src="checklist-art.js" defer></script>
+<script src="checklist-widgets.js" defer></script>
+</head>
+<body data-panel="overview">
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-brand" viewBox="0 0 24 24"><path d="m3 7 2 2 4-4m3 2h8M3 15l2 2 4-4m3 2h8"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M8 4v4m8-4v4M4 11h16"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-backup" viewBox="0 0 24 24"><path d="M12 4v10m-4-4 4 4 4-4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></symbol>
+  <symbol id="i-checklist" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="2"/><path d="m8 10 1.5 1.5 3-3M13 11h3m-8 5h8"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19c2-6 6-9 12-12M6 16c-2-6 3-10 13-11 0 9-4 14-11 13"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="m5 16-1 4 4-1L19 8l-3-3L5 16Zm9-9 3 3"/></symbol>
+  <symbol id="i-analytics" viewBox="0 0 24 24"><path d="M4 19h16M6 15l4-4 4 2 4-6"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14m-9-3h4m-7 3 1 12h8l1-12m-7 3v6m4-6v6"/></symbol>
+</svg>
+<main class="shell">
+  <noscript><p class="warning">请在支持 JavaScript 的浏览器中打开。</p></noscript>
+  <p class="warning" id="storage-warning" role="alert" hidden></p>
+  <section class="hero" aria-labelledby="hero-heading">
+    <img class="hero-landscape" id="hero-landscape" alt="" aria-hidden="true" width="1504" height="846">
+    <div class="hero-copy">
+      <div class="hero-date"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg><time id="hero-date"></time></div>
+      <h1 id="hero-heading">今日总览</h1>
+      <p id="hero-message" hidden></p>
+    </div>
+    <div class="progress-figure">
+      <div class="progress-ring" id="progress" role="progressbar" aria-label="所选日期任务完成进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="progress-value" aria-hidden="true"><strong id="percent">0</strong><span>%</span></div>
+      </div>
+      <div class="progress-caption" id="progress-caption">0 / 0 项完成</div>
+    </div>
+  </section>
+  <section class="card habit-card" aria-labelledby="habit-title">
+    <img class="habit-tree" id="habit-tree" alt="" aria-hidden="true" width="288" height="304">
+    <div class="card-header">
+      <div class="card-heading"><span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-leaf"/></svg></span><h2 id="habit-title">每日打卡</h2></div>
+      <span class="badge" id="streak">连续 0 天</span>
+    </div>
+    <p class="note" id="habit-note">完成任意一项任务即可打卡。</p>
+    <div class="week" id="week" aria-label="最近七天的打卡记录"></div>
+    <div class="habit-summary">
+      <div><span>本月打卡</span><strong id="habit-month">0 天</strong></div>
+      <div><span>最长连续</span><strong id="habit-best">0 天</strong></div>
+    </div>
+  </section>
+</main>
+<div class="sr-only" id="announce" role="status"></div>
+
+</body>
+</html>

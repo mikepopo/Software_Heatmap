@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>任务森林 · 每日清单</title>
+<link rel="stylesheet" href="checklist-widgets.css">
+<script src="checklist-art.js" defer></script>
+<script src="checklist-widgets.js" defer></script>
+</head>
+<body data-panel="forest">
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-brand" viewBox="0 0 24 24"><path d="m3 7 2 2 4-4m3 2h8M3 15l2 2 4-4m3 2h8"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M8 4v4m8-4v4M4 11h16"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-backup" viewBox="0 0 24 24"><path d="M12 4v10m-4-4 4 4 4-4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></symbol>
+  <symbol id="i-checklist" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="2"/><path d="m8 10 1.5 1.5 3-3M13 11h3m-8 5h8"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19c2-6 6-9 12-12M6 16c-2-6 3-10 13-11 0 9-4 14-11 13"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="m5 16-1 4 4-1L19 8l-3-3L5 16Zm9-9 3 3"/></symbol>
+  <symbol id="i-analytics" viewBox="0 0 24 24"><path d="M4 19h16M6 15l4-4 4 2 4-6"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14m-9-3h4m-7 3 1 12h8l1-12m-7 3v6m4-6v6"/></symbol>
+</svg>
+<main class="shell">
+  <noscript><p class="warning">请在支持 JavaScript 的浏览器中打开。</p></noscript>
+  <p class="warning" id="storage-warning" role="alert" hidden></p>
+  <section id="forest" class="card forest-card" aria-labelledby="forest-heading">
+    <div class="card-header">
+      <div class="card-heading"><span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-leaf"/></svg></span><h2 id="forest-heading">任务森林</h2></div>
+      <div class="forest-periods" role="group" aria-label="森林显示范围">
+        <button type="button" data-forest-range="day" aria-pressed="true">当天</button>
+        <button type="button" data-forest-range="month" aria-pressed="false">当月</button>
+        <button type="button" data-forest-range="year" aria-pressed="false">当年</button>
+      </div>
+    </div>
+    <div class="forest-counts">
+      <span><span id="forest-date">今天</span> <strong id="forest-daily">0</strong> 棵</span>
+      <span>累计 <strong id="forest-total">0</strong> 棵</span>
+      <span id="forest-capacity" class="forest-capacity">当前果园 · 已种 0 / 25 棵</span>
+    </div>
+    <div class="forest-tabs" role="group" aria-label="森林内容">
+      <button class="button" type="button" data-forest-tab="orchard" aria-pressed="true">果园</button>
+      <button class="button" type="button" data-forest-tab="guide" aria-pressed="false">树种图鉴</button>
+    </div>
+    <div class="forest-content" data-forest-view="orchard">
+      <div class="forest-land" id="forest-land">
+        <div class="forest-stage">
+          <img class="orchard-landscape" id="orchard-landscape" alt="暮色下的溪畔果园，远处有石屋和层叠的山丘" width="1504" height="846">
+          <div class="forest-motes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <ul class="forest-trees" id="forest-trees" aria-label="种下的树，点击查看任务" hidden></ul>
+        </div>
+        <div class="forest-basebar" id="forest-basebar">
+          <p class="forest-empty" id="forest-empty">完成一项任务，种下第一棵树。</p>
+          <p class="forest-detail" id="forest-detail" aria-live="polite" hidden></p>
+          <div class="forest-pages" id="forest-pages" aria-label="果园分页" hidden>
+            <button type="button" class="icon-button" id="forest-prev-page" aria-label="上一片果园"><svg class="icon" aria-hidden="true"><use href="#i-left"/></svg></button>
+            <select class="forest-page-select" id="forest-page-select" aria-label="跳转果园"></select>
+            <button type="button" class="icon-button" id="forest-next-page" aria-label="下一片果园"><svg class="icon" aria-hidden="true"><use href="#i-right"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="forest-guide">
+        <div class="forest-guide-header"><h3>树种图鉴</h3><span id="forest-guide-count" class="forest-guide-count"></span></div>
+        <p class="forest-guide-note">完成任务时会自动种下已解锁的树种。</p>
+        <div class="species-grid" id="forest-species"></div>
+        <p class="forest-milestone" id="forest-milestone"></p>
+        <progress class="forest-progress" id="forest-progress" aria-label="下一个树种的解锁进度" hidden></progress>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="sr-only" id="announce" role="status"></div>
+
+</body>
+</html>

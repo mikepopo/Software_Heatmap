@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>年度完成热力图 · 每日清单</title>
+<link rel="stylesheet" href="checklist-widgets.css">
+<script src="checklist-widgets.js" defer></script>
+</head>
+<body data-panel="heatmap">
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-brand" viewBox="0 0 24 24"><path d="m3 7 2 2 4-4m3 2h8M3 15l2 2 4-4m3 2h8"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M8 4v4m8-4v4M4 11h16"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-backup" viewBox="0 0 24 24"><path d="M12 4v10m-4-4 4 4 4-4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></symbol>
+  <symbol id="i-checklist" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="2"/><path d="m8 10 1.5 1.5 3-3M13 11h3m-8 5h8"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19c2-6 6-9 12-12M6 16c-2-6 3-10 13-11 0 9-4 14-11 13"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="m5 16-1 4 4-1L19 8l-3-3L5 16Zm9-9 3 3"/></symbol>
+  <symbol id="i-analytics" viewBox="0 0 24 24"><path d="M4 19h16M6 15l4-4 4 2 4-6"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14m-9-3h4m-7 3 1 12h8l1-12m-7 3v6m4-6v6"/></symbol>
+</svg>
+<main class="shell">
+  <noscript><p class="warning">请在支持 JavaScript 的浏览器中打开。</p></noscript>
+  <p class="warning" id="storage-warning" role="alert" hidden></p>
+  <section id="yearly" class="card heatmap-card" aria-labelledby="heatmap-heading">
+    <div class="card-header">
+      <div class="card-heading"><span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg></span><h2 id="heatmap-heading">年度完成热力图</h2></div>
+      <div class="year-controls" aria-label="热力图年份">
+        <button type="button" class="icon-button" id="heat-prev" aria-label="前一年" title="前一年"><svg class="icon" aria-hidden="true"><use href="#i-left"/></svg></button>
+        <span class="heat-year" id="heat-year"></span>
+        <button type="button" class="icon-button" id="heat-next" aria-label="后一年" title="后一年"><svg class="icon" aria-hidden="true"><use href="#i-right"/></svg></button>
+      </div>
+    </div>
+    <div class="heat-totals">
+      <span>有完成记录 <strong id="heat-active">0</strong> 天</span>
+      <span>已完成 <strong id="heat-done">0</strong> 项</span>
+      <span>全部完成 <strong id="heat-full">0</strong> 天</span>
+    </div>
+    <div id="heatmap" class="heatmap" role="group" aria-label="年度任务完成记录，使用方向键移动"></div>
+    <div class="heat-footer">
+      <div class="heat-detail">
+        <p class="note" id="heat-selection" aria-live="polite"></p>
+      </div>
+      <div class="heat-legend" aria-label="颜色表示每天完成的任务数">
+        <span><i aria-hidden="true"></i>0</span>
+        <span><i data-level="1" aria-hidden="true"></i>1</span>
+        <span><i data-level="2" aria-hidden="true"></i>2–3</span>
+        <span><i data-level="3" aria-hidden="true"></i>4–5</span>
+        <span><i data-level="4" aria-hidden="true"></i>6+ 项</span>
+      </div>
+    </div>
+    <p id="heat-recap" class="note heat-recap" hidden></p>
+  </section>
+</main>
+<div class="sr-only" id="announce" role="status"></div>
+
+</body>
+</html>

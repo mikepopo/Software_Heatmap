@@ -147,10 +147,14 @@ h1{margin:0;font-size:18px;font-weight:800;color:var(--strong);white-space:nowra
 .bk span,.pile .bk span{position:absolute;inset:10px 3px 9px;display:block;writing-mode:vertical-rl;text-orientation:mixed;white-space:normal;word-break:break-all;overflow:visible;text-overflow:clip;font-size:10px;line-height:1.05;letter-spacing:0;text-align:center;opacity:1;padding:0;pointer-events:none}
 .bk.thin span{display:block}.pile .more{position:absolute;left:calc(100% + 4px);bottom:0;margin:0;font-size:9px;line-height:15px;animation:none}
 .tip b{display:block;-webkit-line-clamp:unset;overflow:visible}
+.book-menu{position:fixed;z-index:1000;width:195px;padding:7px;background:var(--surface);border:1px solid var(--line);border-radius:9px;box-shadow:0 9px 28px #071b2440;color:var(--ink)}[hidden]{display:none!important}.book-menu p{margin:3px 6px 7px;font-size:11px;line-height:1.4;overflow-wrap:anywhere;color:var(--muted);max-height:45px;overflow:auto}.book-menu button{display:block;width:100%;border:0;background:transparent;text-align:left;color:#bb4038;border-radius:5px;padding:8px;font:inherit;font-size:12px;cursor:pointer}.book-menu button:hover,.book-menu button:focus-visible{background:#bd514314;outline:0}
+.delete-dialog{max-width:390px;width:calc(100% - 26px);border:1px solid var(--line);border-radius:12px;padding:17px;background:var(--surface);color:var(--ink);box-shadow:0 15px 50px #071b2466}.delete-dialog::backdrop{background:#102d2d80}.delete-dialog h2{font-size:16px;margin:0 0 8px}.delete-dialog p{font-size:12px;line-height:1.7;overflow-wrap:anywhere;margin:6px 0;color:var(--muted)}.delete-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}.delete-actions button{font:inherit;font-size:12px;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);cursor:pointer}.delete-actions .danger{background:#b9433b;border-color:#b9433b;color:white}.delete-actions button:disabled{opacity:.6;cursor:wait}.delete-dialog .error{color:#bb4038}
 </style>
-<script src="Paper_data.js?v=reading-v3"></script>
+<script src="Paper_data.js?v=reading-v4"></script>
 </head>
 <body>
+<div id="book-menu" class="book-menu" role="menu" aria-label="论文操作" hidden><p id="menu-paper-name"></p><button type="button" role="menuitem" id="menu-delete">删除论文与 PDF</button></div>
+<dialog id="delete-dialog" class="delete-dialog" aria-labelledby="delete-title"><h2 id="delete-title">删除论文</h2><p id="delete-paper-name"></p><p>将同时删除 GitHub 当前分支中的 PDF 和阅读记录，热力图按剩余记录更新。可从阅读台的回收站恢复。</p><p class="error" id="delete-error" role="alert"></p><div class="delete-actions"><button type="button" id="delete-cancel">取消</button><button type="button" class="danger" id="delete-confirm">删除 PDF 和记录</button></div></dialog>
 <main class="card" id="root">
  <div class="top"><h1>📚 论文书架</h1><span class="count" id="count"></span></div>
  <div class="scene night" id="scene">
@@ -217,11 +221,6 @@ h1{margin:0;font-size:18px;font-weight:800;color:var(--strong);white-space:nowra
    date：读完的日期 YYYY-MM-DD（Paper_heatmap.html 和 Paper_Record 文件夹里的组件会自动读取它） */
 const PAPERS = [
   {
-    "title": "UR&R_CVPR_2021",
-    "pdf": "papers/unsupervised_rr.pdf",
-    "date": "2026-11-18"
-  },
-  {
     "title": "main",
     "pdf": "papers/fe3ac8cbe50c7db69843ccafe39d1e51cf915c2d1ac7eb6b3ca932a83982bdf0.pdf",
     "date": "2026-11-18"
@@ -229,7 +228,13 @@ const PAPERS = [
 ];
 /* ================= 打算读、还没读完的论文放在 TO_READ（摆在书桌上） =================
    读完后把那一行从 TO_READ 剪切到 PAPERS 末尾并补上 date，下次打开时它会从书桌飞上书架 */
-const TO_READ = [];
+const TO_READ = [
+  {
+    "title": "UR&R_CVPR_2021",
+    "pdf": "papers/unsupervised_rr.pdf",
+    "date": "2026-11-01"
+  }
+];
 /* ===================================================================== */
 (async () => {
 const sharedState = await PaperData.load();
@@ -289,7 +294,7 @@ function layout() {
     items.forEach(j=>{
       const b=list[j],h=hash(b.title),[c,t]=PALETTE[h%PALETTE.length],el=document.createElement(b.pdf?"a":"button");
       if(b.pdf){el.href=encodeURI(b.pdf);el.target="_blank";el.rel="noopener";}else el.type="button";
-      el.className="bk";el.dataset.idx=j;el.title=b.title;
+      el.className="bk";el.dataset.idx=j;el.dataset.paperId=b.id || "";el.title=b.title;
       el.setAttribute("aria-label",b.title+"，"+(b.date||"")+" 读完"+(b.pdf?"，打开 PDF":""));
       el.style.cssText="--w:"+size.w+"px;--h:"+size.h+"px;--c:"+c+";--t:"+t+";--i:"+i;
       if(flown.has(b.title))el.classList.add("fly");
@@ -342,7 +347,7 @@ function header() {
   $("pile").innerHTML=show.map((b,i)=>{
     const h=hash(b.title),[c,t]=PALETTE[h%PALETTE.length],lab=esc(b.title+"，待读"+(b.pdf?"，打开 PDF":""));
     const st="--w:"+size.w+"px;--h:"+size.h+"px;--c:"+c+";--t:"+t+";--dx:0px;--rt:0deg;--i:"+i;
-    const attrs='class="bk fb" data-d="'+i+'" aria-label="'+lab+'" title="'+esc(b.title)+'" style="'+st+'"';
+    const attrs='class="bk fb" data-d="'+i+'" data-paper-id="'+esc(b.id || "")+'" aria-label="'+lab+'" title="'+esc(b.title)+'" style="'+st+'"';
     return b.pdf?'<a '+attrs+' href="'+encodeURI(b.pdf)+'" target="_blank" rel="noopener"><span>'+esc(PaperData.spineTitle(b.title))+'</span></a>':'<button type="button" '+attrs+'><span>'+esc(PaperData.spineTitle(b.title))+'</span></button>';
   }).join("")+(m>cap?'<button type="button" class="more" aria-label="还有 '+(m-cap)+' 篇待读">+'+(m-cap)+'</button>':"");
   $("stars").innerHTML=Array.from({length:9},(_,i)=>'<i class="star" style="left:'+(8+(i*37)%80)+'%;top:'+(8+(i*53)%70)+'%;animation-delay:'+((i*.37)%2)+'s"></i>').join("");
@@ -385,6 +390,54 @@ $("pile").addEventListener("click", e => { const el = e.target.closest(".fb");
   if (e.target.closest(".more")) toast(`📌 书桌上还有 ${m} 篇待读`); });
 
 let tt; function toast(s) { const t = $("toast"); t.innerHTML = s.split(/(?<=[，：])/).map(x => `<span>${esc(x)}</span>`).join(""); t.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("show"), 2600); }
+
+let menuPaper = null, deletePaper = null, deleteBusy = false;
+function hideBookMenu() { $("book-menu").hidden=true; }
+function openBookMenu(el,x,y) {
+  if(deleteBusy)return;
+  menuPaper=sharedState.papers.find(paper=>paper.id===el.dataset.paperId);
+  if(!menuPaper){toast("演示书本不支持删除");return;}
+  const menu=$("book-menu");
+  $("menu-paper-name").textContent=menuPaper.title;
+  menu.hidden=false;
+  menu.style.left=Math.max(6,Math.min(innerWidth-menu.offsetWidth-6,x))+"px";
+  menu.style.top=Math.max(6,Math.min(innerHeight-menu.offsetHeight-6,y))+"px";
+  $("menu-delete").focus();
+}
+document.addEventListener("contextmenu",event=>{
+  const el=event.target.closest(".bk");
+  if(!el)return;
+  event.preventDefault();openBookMenu(el,event.clientX,event.clientY);
+});
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape"){hideBookMenu();return;}
+  if(event.key==="ContextMenu" || event.shiftKey && event.key==="F10"){
+    const el=event.target.closest(".bk");if(!el)return;
+    event.preventDefault();const r=el.getBoundingClientRect();openBookMenu(el,r.right,r.top+12);
+  }
+});
+document.addEventListener("pointerdown",event=>{if(!event.target.closest("#book-menu"))hideBookMenu();});
+addEventListener("blur",hideBookMenu);
+$("menu-delete").addEventListener("click",()=>{
+  if(!menuPaper || deleteBusy)return;
+  deletePaper={id:menuPaper.id,title:menuPaper.title,expectedPaper:JSON.stringify(menuPaper)};
+  hideBookMenu();$("tip").classList.remove("show");
+  $("delete-paper-name").textContent="《"+deletePaper.title+"》";
+  $("delete-error").textContent="";$("delete-dialog").showModal();
+});
+$("delete-cancel").addEventListener("click",()=>{if(!deleteBusy)$("delete-dialog").close();});
+$("delete-dialog").addEventListener("cancel",event=>{if(deleteBusy)event.preventDefault();});
+$("delete-confirm").addEventListener("click",async()=>{
+  if(!deletePaper || deleteBusy)return;
+  if(!PaperData.token()){$("delete-error").textContent="请先在论文阅读台连接 GitHub，再删除 PDF。";return;}
+  deleteBusy=true;$("delete-confirm").disabled=true;$("delete-cancel").disabled=true;
+  $("delete-error").textContent="正在同步删除 GitHub PDF 和记录…";
+  try {
+    await PaperData.commitOperation({type:"delete",paperId:deletePaper.id,expectedPaper:deletePaper.expectedPaper,at:new Date().toISOString()});
+    location.reload();
+  } catch(error) {$("delete-error").textContent=error.message;}
+  finally {deleteBusy=false;$("delete-confirm").disabled=false;$("delete-cancel").disabled=false;}
+});
 
 layout();
 if (q.has("still")) document.querySelectorAll(".bk,.fb").forEach(b => b.style.animation = "none");

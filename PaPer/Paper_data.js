@@ -27,8 +27,13 @@ function validDay(value) {
 }
 function validate(state) {
   if (!state || state.schemaVersion !== 1 || !Array.isArray(state.papers) || !Array.isArray(state.legacyReadDates) || !Number.isSafeInteger(state.revision) || state.revision < 0) throw new Error("论文记录格式无效，已停止写入。");
+  if (state.deletedPapers && !Array.isArray(state.deletedPapers)) throw new Error("回收站记录格式无效。");
+  for (const entry of state.deletedPapers || []) {
+    if (!entry?.paper || !Number.isFinite(new Date(entry.deletedAt).getTime()) || (entry.pdfBackup && (!/^PaPer\/papers\/[\w.-]+\.pdf$/i.test(entry.pdfBackup.path) || !/^[a-f0-9]{40}$/i.test(entry.pdfBackup.sha)))) throw new Error("回收站记录格式无效。");
+  }
+  if (state.deskNote && (typeof state.deskNote.text !== "string" || state.deskNote.text.length > 4000 || !Number.isFinite(new Date(state.deskNote.updatedAt).getTime()))) throw new Error("便签格式无效。");
   const ids = new Set();
-  for (const paper of state.papers) {
+  for (const paper of state.papers.concat((state.deletedPapers || []).map(entry => entry.paper))) {
     if (!paper || typeof paper.id !== "string" || ids.has(paper.id) || !String(paper.title || "").trim() || !Array.isArray(paper.stages) || paper.stages.length !== 5) throw new Error("论文记录不完整，已停止写入。");
     ids.add(paper.id);
     let gap = false;
@@ -84,6 +89,26 @@ function applyOperation(state, operation) {
   if (operation.type === "add") {
     if (next.papers.some(paper => paper.id === operation.paper.id)) return next;
     next.papers.push(operation.paper);
+  } else if (operation.type === "note") {
+    if (typeof operation.text !== "string" || operation.text.length > 4000) throw new Error("便签最多可写4000字。");
+    if (operation.expectedNoteAt !== undefined && operation.expectedNoteAt !== (next.deskNote?.updatedAt || "")) throw new Error("其他页面已更新便签，草稿已保留，请先载入已保存版本。");
+    if (operation.text === (next.deskNote?.text || "")) return next;
+    next.deskNote = {text:operation.text,updatedAt:operation.at};
+  } else if (operation.type === "delete") {
+    const index = next.papers.findIndex(paper => paper.id === operation.paperId);
+    if (index < 0) return next;
+    const paper = next.papers[index];
+    if (operation.expectedPaper && operation.expectedPaper !== JSON.stringify(paper)) throw new Error("论文记录刚刚发生变化，请刷新后重新删除。");
+    next.deletedPapers ||= [];
+    next.deletedPapers.push({paper,position:index,deletedAt:operation.at,...(operation.pdfBackup ? {pdfBackup:operation.pdfBackup} : {})});
+    next.papers.splice(index,1);
+  } else if (operation.type === "restore") {
+    const index = (next.deletedPapers || []).findIndex(entry => entry.paper.id === operation.paperId);
+    if (index < 0) return next;
+    const entry = next.deletedPapers[index];
+    if (operation.expectedDeletedAt && operation.expectedDeletedAt !== entry.deletedAt) throw new Error("回收站记录已改变，请刷新后重试。");
+    next.papers.splice(Math.min(Math.max(0,entry.position || 0),next.papers.length),0,entry.paper);
+    next.deletedPapers.splice(index,1);
   } else if (["stage", "undo"].includes(operation.type)) {
     const paper = next.papers.find(item => item.id === operation.paperId);
     if (!paper) throw new Error("这篇论文已不在记录中，请刷新后重试。");
@@ -136,10 +161,10 @@ function remember(state, notify) {
   }
   return state;
 }
-async function api(path, options = {}) {
+async function request(path, options = {}) {
   const key = token();
   if (!key) throw new Error("请先连接 GitHub，再上传或确认阅读。");
-  const response = await fetch(API + path, {
+  const response = await fetch("https://api.github.com/repos/" + REPO + "/" + path, {
     ...options,
     cache: "no-store",
     headers: { "Content-Type": "application/json", Accept: "application/vnd.github+json", Authorization: "Bearer " + key, "X-GitHub-Api-Version": "2022-11-28", ...(options.headers || {}) }
@@ -151,6 +176,7 @@ async function api(path, options = {}) {
   }
   return response.json();
 }
+function api(path, options = {}) { return request("contents/" + path, options); }
 async function freshState() {
   const file = await api(STATE_PATH + "?ref=" + BRANCH);
   if (typeof file.content !== "string" || !file.sha) throw new Error("无法读取 GitHub 中的论文记录。");
@@ -169,20 +195,72 @@ async function load(options = {}) {
     throw new Error(error.message || "无法读取 GitHub 论文记录，请点击刷新重试。");
   }
 }
+function paperPath(paper) {
+  if (!paper.pdf) return "";
+  if (!/^papers\/[\w.-]+\.pdf$/i.test(paper.pdf)) throw new Error("PDF 路径不在本仓库的 papers 目录，已停止删除。");
+  return "PaPer/" + paper.pdf;
+}
+async function commitFileOperation(operation) {
+  for (let attempt=0;attempt<3;attempt++) {
+    const head = (await request("git/ref/heads/" + BRANCH)).object.sha;
+    const treeSha = (await request("git/commits/" + head)).tree.sha;
+    const file = await api(STATE_PATH + "?ref=" + head);
+    const state = validate(JSON.parse(decode(file.content)));
+    const entries = await request("git/trees/" + treeSha + "?recursive=1");
+    if (entries.truncated) throw new Error("文件列表不完整，已停止删除或恢复。");
+    const active = state.papers.find(paper=>paper.id===operation.paperId);
+    const deleted = state.deletedPapers?.find(entry=>entry.paper.id===operation.paperId);
+    if (operation.type==="delete" && !active || operation.type==="restore" && !deleted) return remember(state,true);
+    let pdfEntry = null, op = {...operation};
+    if (operation.type==="delete") {
+      const path=paperPath(active);
+      if (path) {
+        if(state.papers.some(paper=>paper.id!==active.id && paperPath(paper)===path)) throw new Error("这份 PDF 还被另一条论文记录使用，请先处理重复记录。");
+        const blob=entries.tree.find(entry=>entry.path===path && entry.type==="blob");
+        if(blob){op.pdfBackup={path,sha:blob.sha};pdfEntry={path,mode:"100644",type:"blob",sha:null};}
+      }
+    } else {
+      const path=paperPath(deleted.paper);
+      if(path && !deleted.pdfBackup) throw new Error("原 PDF 已缺失，无法完整恢复，请重新上传。");
+      if(path){
+        const present=entries.tree.find(entry=>entry.path===path);
+        if(present && present.sha!==deleted.pdfBackup.sha) throw new Error("该路径已有另一份 PDF，已停止恢复。");
+        if(!present) pdfEntry={path,mode:"100644",type:"blob",sha:deleted.pdfBackup.sha};
+      }
+    }
+    const next = applyOperation(state,op);
+    if(next.revision===state.revision) return remember(state,true);
+    const tree=[{path:STATE_PATH,mode:"100644",type:"blob",content:JSON.stringify(next,null,2)+"\n"}];
+    if(pdfEntry) tree.push(pdfEntry);
+    try {
+      const createdTree=await request("git/trees",{method:"POST",body:JSON.stringify({base_tree:treeSha,tree})});
+      const commit=await request("git/commits",{method:"POST",body:JSON.stringify({message:operation.type==="delete"?"Delete paper PDF and reading record":"Restore paper PDF and reading record",tree:createdTree.sha,parents:[head]})});
+      await request("git/refs/heads/"+BRANCH,{method:"PATCH",body:JSON.stringify({sha:commit.sha,force:false})});
+      const verified=(await freshState()).state;
+      const present=verified.papers.some(paper=>paper.id===operation.paperId);
+      if(operation.type==="delete" ? present || !verified.deletedPapers?.some(entry=>entry.paper.id===operation.paperId) : !present) throw new Error("删除或恢复后的回读未通过，请刷新检查。");
+      return remember(verified,true);
+    } catch(error) {
+      if(![409,422].includes(error.status) || attempt===2) throw error;
+    }
+  }
+}
+
 function commitOperation(operation) {
   const run = async () => {
+    if (["delete","restore"].includes(operation.type)) return commitFileOperation(operation);
     for (let attempt = 0; attempt < 3; attempt++) {
       const { state, sha } = await freshState();
       const next = applyOperation(state, operation);
       if (next.revision === state.revision) return remember(state, true);
       try {
         await api(STATE_PATH, { method: "PUT", body: JSON.stringify({
-          message: operation.type === "add" ? "Add a paper to the reading desk" : operation.type === "stage" ? "Record paper reading stage " + (operation.index + 1) : operation.type === "undo" ? "Undo paper reading stage " + (operation.index + 1) : operation.type === "pause" ? "Record reading pause reason" : "Resume paper reading",
+          message: operation.type === "add" ? "Add a paper to the reading desk" : operation.type === "stage" ? "Record paper reading stage " + (operation.index + 1) : operation.type === "undo" ? "Undo paper reading stage " + (operation.index + 1) : operation.type === "pause" ? "Record reading pause reason" : operation.type === "note" ? "Save reading desk note" : "Resume paper reading",
           branch: BRANCH, sha, content: encode(JSON.stringify(next, null, 2) + "\n")
         }) });
         const verified = (await freshState()).state;
         const paper = verified.papers.find(item => item.id === (operation.paperId || operation.paper?.id));
-        const confirmed = operation.type === "pause" ? pauseFor(verified, day(operation.at))?.reason === operation.reason.trim()
+        const confirmed = operation.type === "note" ? verified.deskNote?.text === operation.text : operation.type === "pause" ? pauseFor(verified, day(operation.at))?.reason === operation.reason.trim()
           : operation.type === "resume" ? !pauseFor(verified, day(operation.at))
           : operation.type === "undo" ? paper && !isComplete(paper) && !paper.stages[operation.index]
           : operation.type === "stage" ? Boolean(paper?.stages[operation.index]) : Boolean(paper);
@@ -219,7 +297,10 @@ async function upload(file, title) {
   const hash = [...digest].map(value => value.toString(16).padStart(2, "0")).join("");
   const id = "paper-" + hash;
   lastUploadedId = id;
-  const existing = (await freshState()).state.papers.find(paper => paper.id === id);
+  const current = (await freshState()).state;
+  const existing = current.papers.find(paper => paper.id === id);
+  const deleted = current.deletedPapers?.find(entry => entry.paper.id === id);
+  if (deleted) return commitOperation({type:"restore",paperId:id,expectedDeletedAt:deleted.deletedAt,at:new Date().toISOString()});
   if (existing) return remember((await freshState()).state, true);
   const path = "PaPer/papers/" + hash + ".pdf";
   try {

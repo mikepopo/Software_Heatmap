@@ -106,6 +106,7 @@ async function api(path, options = {}) {
   if (!key) throw new Error("请先连接 GitHub，再上传或确认阅读。");
   const response = await fetch(API + path, {
     ...options,
+    cache: "no-store",
     headers: { "Content-Type": "application/json", Accept: "application/vnd.github+json", Authorization: "Bearer " + key, "X-GitHub-Api-Version": "2022-11-28", ...(options.headers || {}) }
   });
   if (!response.ok) {

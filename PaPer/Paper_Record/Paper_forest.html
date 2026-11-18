@@ -68,6 +68,7 @@ noscript p{margin:8px 0;font-size:12px}
 @media(max-width:350px){.heading{width:100%;justify-content:space-between}.tools{width:100%;justify-content:space-between}.guide{grid-template-columns:repeat(2,minmax(0,1fr))}.species img{width:54px;height:54px}}
 @media(prefers-reduced-motion:reduce){.tree img,.tree.growing img{animation:none}}
 </style>
+<script src="../Paper_data.js"></script>
 </head>
 <body>
 <main class="card" aria-labelledby="title">
@@ -177,15 +178,7 @@ function validDate(value) {
 }
 
 // Keep the same PAPERS representation as the existing paper shelf.
-function readPapers(source) {
-  const match = source.match(/const\s+PAPERS\s*=\s*\[([\s\S]*?)\]\s*;/);
-  if (!match) throw new Error("论文书架中未找到已读列表 PAPERS。");
-  let entries;
-  try {
-    entries = Function("return [" + match[1] + "]")();
-  } catch (error) {
-    throw new Error("论文书架的已读列表格式有误。");
-  }
+function readPapers(entries) {
   if (!Array.isArray(entries)) throw new Error("论文书架的已读列表格式有误。");
   return entries.filter(item => item && item.title).map((item, index) => {
     const title = String(item.title);
@@ -354,14 +347,11 @@ async function loadPapers() {
   refresh.disabled = true;
   refresh.textContent = "读取中…";
   try {
-    const url = new URL(SHELF_URL);
-    url.searchParams.set("t", String(Date.now()));
-    const response = await fetch(url.href, { cache: "no-store" });
-    if (!response.ok) throw new Error("书架读取失败（HTTP " + response.status + "）。");
-    const source = await response.text();
+    const sharedState = await PaperData.load();
+    const source = JSON.stringify(PaperData.completed(sharedState));
     if (version !== loadVersion) return;
     if (source !== lastSource) {
-      const next = readPapers(source);
+      const next = readPapers(JSON.parse(source));
       growingKeys = new Set(loaded ? next.filter(paper => !knownKeys.has(paper.key)).map(paper => paper.key) : []);
       papers = next;
       knownKeys = new Set(next.map(paper => paper.key));
@@ -423,7 +413,7 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden) loadPapers();
 });
 window.addEventListener("focus", loadPapers);
-setInterval(() => { if (!document.hidden) loadPapers(); }, 60000);
+PaperData.watch(loadPapers);
 loadPapers();
 </script>
 </body>

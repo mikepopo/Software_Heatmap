@@ -54,7 +54,8 @@ h1{margin:0;font-size:18px;font-weight:800;color:var(--strong);white-space:nowra
 .foot b{color:var(--t)}.foot.win{background:linear-gradient(90deg,rgba(217,165,33,.18),rgba(217,165,33,.04))}.foot.past{background:var(--chip);color:var(--muted);font-weight:600}
 @keyframes in{from{opacity:0;transform:translateX(6px)}}
 @media(max-width:560px){.wrap{grid-template-columns:1fr}.num{font-size:32px}.foot{white-space:normal}}
-</style></head>
+</style><script src="../Paper_data.js"></script>
+</head>
 <body>
 <main class="card" id="root">
  <div class="top"><h1>📅 月度回顾</h1><div class="nav"><button id="pv" aria-label="上个月">‹</button><span id="ml"></span><button id="nx" aria-label="下个月">›</button></div></div>
@@ -94,16 +95,15 @@ function buildData(papers, extra, toRead) {
   papers.sort((a, b) => (a.date || "0") < (b.date || "0") ? -1 : (a.date || "0") > (b.date || "0") ? 1 : a.i - b.i);
   const perDay = {};
   papers.forEach(p => { if (p.date) perDay[p.date] = (perDay[p.date] || 0) + 1; });
-  let extraN = 0;
-  (extra || []).forEach(d => { if (isD(d) && !perDay[d]) { perDay[d] = 1; extraN++; } });
-  const sorted = Object.keys(perDay).sort(), days = new Set(sorted);
+  const extraDays = (extra || []).filter(isD);
+  const sorted = [...new Set([...Object.keys(perDay), ...extraDays])].sort(), days = new Set(sorted);
   const now = new Date(), T = ymd(now), Y = ymd(addD(now, -1));
   let cur = 0; const base = days.has(T) ? now : days.has(Y) ? addD(now, -1) : null;
   if (base) for (let d = base; days.has(ymd(d)); d = addD(d, -1)) cur++;
   let best = 0, run = 0, prev = null, maxGapRet = 0;
   for (const s of sorted) { const g = prev ? dayDiff(prev, s) : 0; run = g === 1 ? run + 1 : 1; if (g > maxGapRet) maxGapRet = g; best = Math.max(best, run); prev = s; }
   const last = sorted[sorted.length - 1] || null;
-  return { papers, toRead: (toRead || []).filter(p => p && p.title), perDay, days, sorted, total: papers.length + extraN,
+  return { papers, toRead: (toRead || []).filter(p => p && p.title), perDay, days, sorted, total: papers.length,
     T, Y, now, cur, best, last, since: last ? dayDiff(last, T) : null, readToday: days.has(T), maxGapRet };
 }
 const DEMO_TITLES = ["GeoTransformer", "Predator", "FCGF", "D3Feat", "CoFiNet", "RoITr", "PEAL", "Lepard", "SpinNet", "YOHO", "PointDSC", "SC2-PCR", "MAC", "BUFFER", "RegTR", "TEASER++", "Go-ICP", "FGR", "DGR", "3DMatch", "PointMBF", "DIP", "PPFNet", "Deep Closest Point"];
@@ -121,12 +121,8 @@ function demoData(spec) {
 }
 async function loadData() {
   if (Q.has("demo")) return demoData(Q.get("demo") || "12");
-  const get = u => fetch(u + "?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.text() : "").catch(() => "");
-  const shelf = new URL(DATA_DIR + "Paper_shelf.html", location.href), heat = new URL(DATA_DIR + "Paper_heatmap.html", location.href);
-  const [s, h] = await Promise.all([get(shelf.href), get(heat.href)]);
-  // PDF 路径是相对书架文件写的（papers/xxx.pdf），这里换算成完整地址
-  const fix = arr => arr.map(p => { if (p && p.pdf) try { return { ...p, pdf: new URL(p.pdf, shelf).href }; } catch (e) {} return p; });
-  return buildData(fix(grabArr(s, "PAPERS")), grabArr(h, "READ_DATES"), fix(grabArr(s, "TO_READ")));
+  const state = await PaperData.load();
+  return buildData(PaperData.completed(state), PaperData.readDates(state), PaperData.pending(state));
 }
 let toastT; function toast(s, ms = 2600) { const t = $("toast"); if (!t) return; t.textContent = s; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), ms); }
 function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); if (!Q.has("demo")) localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
@@ -156,7 +152,7 @@ function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage
     // 本月统计
     const days = D.sorted.filter(d => d.startsWith(sel));
     let best = 0, run = 0, pr = null; days.forEach(d => { run = pr && dayDiff(pr, d) === 1 ? run + 1 : 1; best = Math.max(best, run); pr = d; });
-    const wc = [0, 0, 0, 0, 0, 0, 0]; days.forEach(d => wc[parseD(d).getDay()] += D.perDay[d]);
+    const wc = [0, 0, 0, 0, 0, 0, 0]; days.forEach(d => wc[parseD(d).getDay()] += D.perDay[d] || 0);
     const order = [1, 2, 3, 4, 5, 6, 0], fav = order.reduce((a, w) => wc[w] > wc[a] ? w : a, 1);
     $("sd").innerHTML = `${days.length}<small>天</small>`; $("sr").innerHTML = `${best}<small>天</small>`; $("sw").textContent = days.length ? WD[fav] : "—";
     // 近 6 个月
@@ -181,6 +177,7 @@ function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage
   $("nx").onclick = () => { sel = addM(sel, 1); render(); };
   $("bars").addEventListener("click", e => { const b = e.target.closest(".bc"); if (b && b.dataset.k >= minM && b.dataset.k !== sel) { sel = b.dataset.k; render(); } });
   render(true);
-})();
+})().catch(error => { document.getElementById("foot").textContent = error.message; });
+PaperData.watch(() => location.reload());
 </script>
 </body></html>

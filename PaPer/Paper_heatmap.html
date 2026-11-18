@@ -41,17 +41,19 @@
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media(max-width:540px){.card{padding:20px 8px 12px}.topbar{gap:7px}.picker{height:29px;padding-inline:6px}.picker select{max-width:76px}.seg{height:29px}.seg button{height:23px;padding:0 7px}.seg .thumb{height:23px}.stats-row{gap:4px}.legend{gap:5px}}
 #ttl.swap{animation:ttl .35s ease both}@keyframes ttl{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-</style></head>
+</style><script src="Paper_data.js"></script>
+</head>
 <body><main class="card">
 <div class="topbar"><h1 id="ttl">论文阅读记录</h1><div class="tools"><div class="seg" id="seg" style="display:none" role="tablist" aria-label="显示内容"><span class="thumb" id="thumb"></span><button data-v="all" role="tab">全部</button><button data-v="study" role="tab">阅读</button><button data-v="practice" role="tab">实验</button></div><label class="picker" aria-label="按年份筛选"><select id="year-picker" aria-label="选择年份"></select><span class="calendar-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.5A2.5 2.5 0 0 1 22 6.5v12A2.5 2.5 0 0 1 19.5 21h-15A2.5 2.5 0 0 1 2 18.5v-12A2.5 2.5 0 0 1 4.5 4H6V3a1 1 0 0 1 1-1Zm12.5 8h-15v8.5a.5.5 0 0 0 .5.5h14a.5.5 0 0 0 .5-.5V10ZM5 6a.5.5 0 0 0-.5.5V8h15V6.5A.5.5 0 0 0 19 6H5Z"/></svg></span></label></div></div>
 <div class="stats-row" id="stats" aria-live="polite"></div>
 <div class="heatmap-wrap" id="heatmap-wrap"><div class="heatmap" id="heatmap" aria-label="年度科研打卡热力图"></div></div>
 </main>
 <script>
-/* 手动打卡：读论文的日子把日期加进 READ_DATES。日期格式 YYYY-MM-DD；更新时必须保留已有日期。 */
+/* 夜间维护生成日期快照；实时打卡来自 reading-state.json。 */
 const READ_DATES = [];
 const EXPERIMENT_DATES = []; /* 未使用 */
-(()=>{
+(async()=>{
+ const READ_DATES = PaperData.readDates(await PaperData.load());
  const CELL=12,GAP=4,LABEL_WIDTH=46,TOP_ROW_HEIGHT=20,FIRST_YEAR=2020,LAST_YEAR=2035;
  const done=new Set(READ_DATES),partial=new Set(),prac=new Set(EXPERIMENT_DATES),$=id=>document.getElementById(id);
  const pad=n=>String(n).padStart(2,'0'),toISO=d=>d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate());
@@ -118,5 +120,6 @@ const EXPERIMENT_DATES = []; /* 未使用 */
  let went=false;const go=()=>{if(went)return;went=true;renderYear(Number($('year-picker').value||currentYear),!q.has('still'))};setTimeout(go,2500);
  go();
  addEventListener('resize',()=>{const on=document.querySelector('#seg button.on'),th=$('thumb');if(on){th.style.width=on.offsetWidth+'px';th.style.transform=`translateX(${on.offsetLeft}px)`}});
-})();
+})().catch(error => { const message = document.createElement("p"); message.textContent = error.message; document.body.prepend(message); });
+PaperData.watch(() => location.reload());
 </script></body></html>

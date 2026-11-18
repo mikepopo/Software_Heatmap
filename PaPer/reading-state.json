@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "revision": 0,
+  "updatedAt": "2026-11-18T08:00:00.000Z",
+  "legacyReadDates": [],
+  "papers": [
+    {
+      "id": "legacy-unsupervised-rr",
+      "title": "UR&R_CVPR_2021",
+      "pdf": "papers/unsupervised_rr.pdf",
+      "addedAt": "2026-11-01T04:00:00.000Z",
+      "stages": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ]
+}

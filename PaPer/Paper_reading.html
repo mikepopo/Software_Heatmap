@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>论文阅读台</title>
+<style>
+:root{color-scheme:light dark;--ink:#2f3d52;--muted:#667588;--line:#dce4ef;--surface:#fff;--accent:#0f766e;--tint:#edf6f2}
+@media(prefers-color-scheme:dark){:root{--ink:#d8dee9;--muted:#a3afc0;--line:#354255;--surface:#181d25;--accent:#5cc3b6;--tint:#233b34}}
+*{box-sizing:border-box}html,body{margin:0;background:transparent;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}[hidden]{display:none!important}
+.card{padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:0 1px 2px #1f2d3d0a}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}h1{margin:0;font-size:18px;font-weight:800}.actions{display:flex;gap:7px;align-items:center}.small-button{border:1px solid var(--line);border-radius:7px;padding:6px 10px;background:var(--surface);color:var(--ink);font-size:12px}.sync{font-size:12px;color:var(--muted)}
+.workspace{display:grid;grid-template-columns:230px minmax(0,1fr);gap:12px;align-items:stretch}.receiver{display:flex;flex-direction:column;gap:9px;padding:13px;background:var(--tint);border:1px solid var(--line);border-radius:10px}
+.receiver h2{margin:0;font-size:15px;color:var(--accent)}.receiver label{font-size:12px;color:var(--muted)}
+.receiver input[type=text],.receiver select{width:100%;min-width:0;padding:8px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--surface);font-size:12px}
+.drop{display:flex;min-height:130px;flex-direction:column;align-items:center;justify-content:center;gap:9px;border:1.5px dashed #7ca99a;border-radius:9px;background:var(--surface);color:var(--accent);cursor:pointer;text-align:center;padding:12px;font-size:13px}
+.drop.dragging{box-shadow:inset 0 0 0 3px #56a58d55}.drop span:first-child{font-size:29px}.drop small{font-size:11px;color:var(--muted);line-height:1.5}.receiver .repository{font-size:10px;line-height:1.6;color:var(--muted);overflow-wrap:anywhere}
+.bookroom{min-width:0}.bookroom iframe{display:block;width:100%;height:330px;border:0;border-radius:10px;background:transparent}
+.reading{margin-top:13px;padding:12px 14px 14px;border:1px solid var(--line);border-radius:10px;background:linear-gradient(135deg,var(--surface),var(--tint))}
+.reading-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}.reading-title h2{margin:0;font-size:14px;overflow-wrap:anywhere}.reading-title a{font-size:12px;color:var(--accent);text-underline-offset:3px}
+.stages{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:start;text-align:center}
+.switch{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}.mount{padding:7px;border-radius:50%;background:linear-gradient(145deg,#d7dce0,#78818b);box-shadow:0 2px 3px #15202540,inset 0 1px 1px #fff;display:inline-flex}
+.stage-button{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;width:92px;height:92px;border-radius:50%;border:1px solid #761917;background:radial-gradient(ellipse at 34% 23%,#f97870 0,#d9332c 36%,#a41819 80%);color:#fffaf2;font-size:11px;font-weight:750;line-height:1.4;text-shadow:0 1px 1px #6e1717;padding:7px;box-shadow:inset 0 2px 3px #ffc5b166,inset 0 -3px 4px #630b0c99,0 5px 0 #6e1717,0 7px 7px #17232670;transition:transform .12s,box-shadow .12s,filter .15s}
+.stage-button:enabled:hover{filter:brightness(1.08)}.stage-button:active,.stage-button[aria-pressed=true]{transform:translateY(4px);box-shadow:inset 0 2px 6px #59090b99,inset 0 -1px 2px #ffaca655,0 1px 0 #6e1717,0 2px 3px #17232650}
+.stage-button:disabled:not([aria-pressed=true]){filter:saturate(.55) brightness(.6);cursor:default}.stage-date{font-size:11px;color:var(--muted);min-height:16px}.stage-date.done{color:var(--accent);font-weight:650}
+.note{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.6}.status{margin:9px 0 0;font-size:12px;line-height:1.6;color:var(--accent);overflow-wrap:anywhere}.status.error{color:#bd3932}
+dialog{max-width:460px;width:calc(100% - 30px);padding:21px;border:1px solid var(--line);border-radius:13px;background:var(--surface);color:var(--ink);box-shadow:0 18px 70px #0005}dialog::backdrop{background:#142f2d77}dialog h2{margin:0 0 10px;font-size:18px}dialog p{font-size:12px;line-height:1.8;color:var(--muted)}dialog input{width:100%;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}dialog a{color:var(--accent)}.dialog-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:13px}.primary{background:var(--accent);color:var(--surface)}.dialog-error{color:#bd3932}
+@media(max-width:850px){.workspace{grid-template-columns:190px minmax(0,1fr)}.receiver{padding:10px}.bookroom iframe{height:330px}.stage-button{width:76px;height:76px;font-size:10px}.stages{gap:7px}.mount{padding:5px}}
+@media(max-width:600px){.card{padding:10px}.workspace{grid-template-columns:1fr}.receiver{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.receiver h2,.receiver .repository{grid-column:1/-1}.drop{grid-row:span 3;min-height:125px}.bookroom iframe{height:310px}.reading{padding:12px 8px}.stages{gap:10px 3px;grid-template-columns:repeat(3,minmax(0,1fr))}.stage-button{width:82px;height:82px}.note{font-size:11px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<script src="Paper_data.js"></script>
+</head>
+<body>
+<main class="card">
+<div class="top"><h1>📚 论文阅读台</h1><div class="actions"><span id="sync" class="sync">读取中…</span><button class="small-button" type="button" id="refresh">刷新</button><button class="small-button" type="button" id="connect">连接 GitHub</button></div></div>
+<div class="workspace">
+<aside class="receiver">
+<h2>接收待读论文</h2>
+<label class="drop" id="drop" tabindex="0" role="button" aria-label="上传待读论文 PDF"><span aria-hidden="true">＋</span><span>拖入 PDF 或点击上传</span><small>可一次上传多篇</small><input id="files" type="file" accept="application/pdf,.pdf" multiple hidden></label>
+<label for="paper-name">论文名称（单篇上传时可填写）</label><input id="paper-name" type="text" placeholder="默认使用 PDF 文件名" maxlength="240">
+<label for="paper-select">当前阅读</label><select id="paper-select" aria-label="选择当前阅读论文"></select>
+<div class="repository">上传至公开仓库<br>mikepopo/Software_Heatmap<br>PDF 保存在 PaPer/papers</div>
+</aside>
+<div class="bookroom"><iframe id="shelf" src="Paper_shelf.html?v=reading-v1" title="论文书桌与书架"></iframe></div>
+</div>
+<section class="reading" aria-label="五阶段论文阅读">
+<div class="reading-title"><h2 id="paper-title">正在读取论文…</h2><a id="open-pdf" target="_blank" rel="noopener" hidden>打开 PDF</a></div>
+<div class="stages" id="stages"></div>
+<p class="note" id="note">按阅读顺序确认完成阶段，当天会自动记录一次阅读打卡。</p>
+</section>
+<p class="status" id="status" role="status" aria-live="polite"></p>
+</main>
+<dialog id="connection" aria-labelledby="connection-title">
+<h2 id="connection-title">连接 GitHub</h2>
+<p>为 <b>mikepopo/Software_Heatmap</b> 创建 fine-grained personal access token，仓库权限选择 <b>Contents → Read and write</b>。凭据仅保留在当前浏览器会话，关闭会话后需重新连接。</p>
+<p><a href="https://github.com/settings/personal-access-tokens/new?name=Paper-reading-desk&contents=write" target="_blank" rel="noopener">前往 GitHub 创建仓库写入凭据</a></p>
+<label for="github-token">GitHub 凭据</label><input id="github-token" type="password" autocomplete="off" spellcheck="false" placeholder="仅在这里填写">
+<p id="connection-error" class="dialog-error" role="alert"></p>
+<div class="dialog-actions"><button class="small-button" id="disconnect" type="button">断开</button><button class="small-button" id="cancel" type="button">取消</button><button class="small-button primary" id="save-token" type="button">连接</button></div>
+</dialog>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+let state = null;
+let selected = null;
+let busy = false;
+let waitingFiles = [];
+const labels = [
+  ["Abstract", "Introduction", "Related Work"],
+  ["Method1"], ["Method2"], ["Experiment", "Conclusion"], ["总结"]
+];
+function message(text, error = false) { $("status").textContent = text; $("status").className = "status" + (error ? " error" : ""); }
+function render() {
+  $("connect").textContent = PaperData.token() ? "GitHub 已连接" : "连接 GitHub";
+  $("sync").textContent = state ? "已同步 GitHub" : "等待连接";
+  $("files").disabled = busy;
+  $("refresh").disabled = busy;
+  $("paper-select").disabled = busy;
+  if (!state) return;
+  if (!state.papers.some(paper => paper.id === selected)) selected = state.papers.find(paper => !PaperData.isComplete(paper))?.id || state.papers[0]?.id || null;
+  $("paper-select").replaceChildren(...state.papers.map(paper => {
+    const option = document.createElement("option");
+    option.value = paper.id;
+    option.textContent = (PaperData.isComplete(paper) ? "已读 · " : "") + paper.title;
+    return option;
+  }));
+  if (selected) $("paper-select").value = selected;
+  const paper = state.papers.find(item => item.id === selected);
+  $("paper-title").textContent = paper?.title || "上传一篇论文，开始阅读";
+  const pdf = paper ? PaperData.pending(state).concat(PaperData.completed(state)).find(item => item.id === paper.id)?.pdf : "";
+  $("open-pdf").hidden = !pdf;
+  if (pdf) $("open-pdf").href = pdf;
+  const next = paper?.stages.findIndex(stage => !stage);
+  $("stages").replaceChildren(...labels.map((lines, index) => {
+    const wrapper = document.createElement("div"); wrapper.className = "switch";
+    const mount = document.createElement("div"); mount.className = "mount";
+    const button = document.createElement("button"); button.type = "button"; button.className = "stage-button";
+    const done = Boolean(paper && (paper.completedDate || paper.stages[index]));
+    button.setAttribute("aria-pressed", String(done));
+    button.setAttribute("aria-label", lines.join("、") + (done ? "，已完成" : ""));
+    button.disabled = busy || !paper || done || index !== next;
+    for (const line of lines) { const span = document.createElement("span"); span.textContent = line; button.append(span); }
+    button.addEventListener("click", () => markStage(index));
+    const date = document.createElement("span"); date.className = "stage-date" + (done ? " done" : "");
+    date.textContent = paper?.stages[index] ? PaperData.day(paper.stages[index].at) : done ? "已完成" : index === next ? "当前阶段" : "待完成";
+    mount.append(button); wrapper.append(mount, date); return wrapper;
+  }));
+  $("note").textContent = paper && PaperData.isComplete(paper)
+    ? "五个阶段已完成，这篇论文已自动放上书架。"
+    : "依次按下五个按钮；按下一个阶段即记录当天阅读，全部完成后自动上架。";
+}
+async function refresh() {
+  if (busy) return;
+  try { state = await PaperData.load(); render(); message(""); } catch (error) { message(error.message, true); }
+}
+async function markStage(index) {
+  if (!state || busy) return;
+  if (!PaperData.token()) { $("connection").showModal(); return; }
+  const paper = state.papers.find(item => item.id === selected);
+  if (!paper) return;
+  busy = true; render(); message("正在同步阅读进度…");
+  try {
+    state = await PaperData.commitOperation({ type: "stage", paperId: paper.id, index, at: new Date().toISOString() });
+    message(index === 4 ? "已完成整篇阅读，论文已上架，并更新今日打卡。" : "已确认该阶段，今日阅读已记录。");
+  } catch (error) { message(error.message, true); }
+  finally { busy = false; render(); }
+}
+async function uploadFiles(files) {
+  if (busy || !files.length) return;
+  if (!PaperData.token()) { waitingFiles = [...files]; $("connection").showModal(); return; }
+  busy = true; render();
+  try {
+    for (const [index, file] of [...files].entries()) {
+      message("上传 PDF " + (index + 1) + " / " + files.length + "…");
+      state = await PaperData.upload(file, files.length === 1 ? $("paper-name").value : "");
+      const matching = state.papers.find(paper => paper.title === ($("paper-name").value || file.name.replace(/\.pdf$/i, "")));
+      if (matching) selected = matching.id;
+    }
+    $("paper-name").value = ""; $("files").value = "";
+    message("PDF 和待读记录已同步到 GitHub，书桌已更新。");
+  } catch (error) { message(error.message, true); }
+  finally { busy = false; render(); }
+}
+$("files").addEventListener("change", event => uploadFiles([...event.target.files]));
+$("drop").addEventListener("keydown", event => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); $("files").click(); } });
+$("drop").addEventListener("dragover", event => { event.preventDefault(); $("drop").classList.add("dragging"); });
+$("drop").addEventListener("dragleave", () => $("drop").classList.remove("dragging"));
+$("drop").addEventListener("drop", event => { event.preventDefault(); $("drop").classList.remove("dragging"); uploadFiles([...event.dataTransfer.files]); });
+$("paper-select").addEventListener("change", event => { selected = event.target.value; render(); });
+$("refresh").addEventListener("click", refresh);
+$("connect").addEventListener("click", () => { $("connection-error").textContent = ""; $("connection").showModal(); });
+$("cancel").addEventListener("click", () => { waitingFiles = []; $("connection").close(); });
+$("disconnect").addEventListener("click", () => { PaperData.disconnect(); $("github-token").value = ""; $("connection").close(); render(); });
+$("save-token").addEventListener("click", async () => {
+  $("save-token").disabled = true;
+  try {
+    state = await PaperData.connect($("github-token").value);
+    $("github-token").value = ""; $("connection").close(); render();
+    message("GitHub 已连接，凭据仅保留在本次浏览器会话。");
+    const files = waitingFiles; waitingFiles = [];
+    if (files.length) await uploadFiles(files);
+  } catch (error) { $("connection-error").textContent = error.message; }
+  finally { $("save-token").disabled = false; }
+});
+PaperData.watch(next => { state = next; render(); });
+render(); refresh();
+</script>
+</body>
+</html>

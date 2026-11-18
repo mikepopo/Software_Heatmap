@@ -138,7 +138,15 @@ h1{margin:0;font-size:18px;font-weight:800;color:var(--strong);white-space:nowra
 
 @media(max-width:560px){h1{font-size:15.5px}.card{padding:12px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Readable pending-paper spines on the desk. */
+.pile{width:76%;max-width:190px;left:2%;max-height:155px;overflow-y:auto;overflow-x:hidden;padding:3px}
+.pile .fb{width:100%;height:20px;min-height:20px;--dx:0px;--rt:0deg;text-align:left}
+.pile .fb::after{display:none}
+.pile .fb span{display:block;padding:3px 7px;font-size:10px;line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.small .pile{width:85%}.small .pile .fb{height:18px;min-height:18px}.small .pile .fb span{font-size:9px;padding:2px 5px}
 </style>
+<script src="Paper_data.js"></script>
 </head>
 <body>
 <main class="card" id="root">
@@ -201,7 +209,7 @@ h1{margin:0;font-size:18px;font-weight:800;color:var(--strong);white-space:nowra
  </div>
 </main>
 <script>
-/* ================= 每读完一篇，就在 PAPERS 末尾加一行 =================
+/* ================= 夜间维护生成兼容快照；日常通过论文阅读台更新 =================
    title：书脊上显示的论文名
    pdf：PDF 在仓库里的路径（把 PDF 上传到同一仓库的 papers 文件夹）
    date：读完的日期 YYYY-MM-DD（Paper_heatmap.html 和 Paper_Record 文件夹里的组件会自动读取它） */
@@ -213,6 +221,10 @@ const TO_READ = [
   { title: "UR&R_CVPR_2021", pdf: "papers/unsupervised_rr.pdf", date: "2026-11-01" },
 ];
 /* ===================================================================== */
+(async () => {
+const sharedState = await PaperData.load();
+const PAPERS = PaperData.completed(sharedState);
+const TO_READ = PaperData.pending(sharedState);
 const TARGET = 100;   // 读满 100 篇，房间全亮
 /* 书脊配色：象牙、米白、灰绿、石板、青绿（[书脊色, 线条与字色]） */
 const PALETTE = [["#e9e1ca", "#4e4738"], ["#d8cdb0", "#4d4535"], ["#bccaae", "#334033"], ["#93a991", "#22301f"], ["#6e8a7d", "#efe7d2"], ["#5b6b70", "#ebe4cf"],
@@ -320,8 +332,8 @@ function header() {
   const small = $("scene").clientWidth < 520, DESK_MAX = small ? 4 : 8, show = desk.slice(0, DESK_MAX);
   $("pile").innerHTML = show.map((b, i) => { const h = hash(b.title), [c, t] = PALETTE[h % PALETTE.length], lab = esc(`${b.title}，待读${b.pdf ? "，打开 PDF" : ""}`);
     const st = `--bw:${(small ? 21 : 29) + h % (small ? 6 : 9)}px;--bh:${(small ? 5 : 6) + h % 3}px;--c:${c};--t:${t};--dx:${h % 5}px;--rt:${(h % 5) - 2}deg;--i:${i}`;
-    return b.pdf ? `<a class="fb" data-d="${i}" href="${encodeURI(b.pdf)}" target="_blank" rel="noopener" aria-label="${lab}" style="${st}"></a>`
-      : `<button type="button" class="fb" data-d="${i}" aria-label="${lab}" style="${st}"></button>`; }).join("")
+    return b.pdf ? `<a class="fb" data-d="${i}" href="${encodeURI(b.pdf)}" target="_blank" rel="noopener" aria-label="${lab}" style="${st}"><span>${esc(b.title)}</span></a>`
+      : `<button type="button" class="fb" data-d="${i}" aria-label="${lab}" style="${st}"><span>${esc(b.title)}</span></button>`; }).join("")
     + (m > DESK_MAX ? `<button type="button" class="more" id="more" aria-label="书桌上共有 ${m} 篇待读">+${m - DESK_MAX}</button>` : "");
   const stz = $("stars"); stz.innerHTML = Array.from({ length: 9 }, (_, i) => `<i class="star" style="left:${8 + (i * 37) % 80}%;top:${8 + (i * 53) % 70}%;animation-delay:${(i * .37) % 2}s"></i>`).join("");
 }
@@ -372,6 +384,8 @@ else if (fresh) setTimeout(() => toast(`📚 新上架 ${fresh} 篇${fresh === 1
 let rz, wasSmall = $("scene").clientWidth < 520;
 addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { const s = $("scene").clientWidth < 520; if (s !== wasSmall) { wasSmall = s; header(); }
   layout(); document.querySelectorAll(".bk,.fb").forEach(b => b.style.animation = "none"); }, 120); });
+})().catch(error => { document.getElementById("count").textContent = error.message; });
+PaperData.watch(() => location.reload());
 </script>
 </body>
 </html>

@@ -89,6 +89,12 @@ function applyOperation(state, operation) {
   if (operation.type === "add") {
     if (next.papers.some(paper => paper.id === operation.paper.id)) return next;
     next.papers.push(operation.paper);
+  } else if (operation.type === "clear-trash") {
+    const expected = operation.entries || [];
+    if (!Array.isArray(expected)) throw new Error("回收站清空参数无效。");
+    const keys = new Set(expected.map(entry => entry.id + "|" + entry.deletedAt));
+    next.deletedPapers = (next.deletedPapers || []).filter(entry => !keys.has(entry.paper.id + "|" + entry.deletedAt));
+    if (next.deletedPapers.length === (state.deletedPapers || []).length) return next;
   } else if (operation.type === "note") {
     if (typeof operation.text !== "string" || operation.text.length > 4000) throw new Error("便签最多可写4000字。");
     if (operation.expectedNoteAt !== undefined && operation.expectedNoteAt !== (next.deskNote?.updatedAt || "")) throw new Error("其他页面已更新便签，草稿已保留，请先载入已保存版本。");
@@ -255,12 +261,12 @@ function commitOperation(operation) {
       if (next.revision === state.revision) return remember(state, true);
       try {
         await api(STATE_PATH, { method: "PUT", body: JSON.stringify({
-          message: operation.type === "add" ? "Add a paper to the reading desk" : operation.type === "stage" ? "Record paper reading stage " + (operation.index + 1) : operation.type === "undo" ? "Undo paper reading stage " + (operation.index + 1) : operation.type === "pause" ? "Record reading pause reason" : operation.type === "note" ? "Save reading desk note" : "Resume paper reading",
+          message: operation.type === "add" ? "Add a paper to the reading desk" : operation.type === "stage" ? "Record paper reading stage " + (operation.index + 1) : operation.type === "undo" ? "Undo paper reading stage " + (operation.index + 1) : operation.type === "pause" ? "Record reading pause reason" : operation.type === "clear-trash" ? "Empty paper recycle bin" : operation.type === "note" ? "Save reading desk note" : "Resume paper reading",
           branch: BRANCH, sha, content: encode(JSON.stringify(next, null, 2) + "\n")
         }) });
         const verified = (await freshState()).state;
         const paper = verified.papers.find(item => item.id === (operation.paperId || operation.paper?.id));
-        const confirmed = operation.type === "note" ? verified.deskNote?.text === operation.text : operation.type === "pause" ? pauseFor(verified, day(operation.at))?.reason === operation.reason.trim()
+        const confirmed = operation.type === "clear-trash" ? !(verified.deletedPapers || []).some(entry => operation.entries.some(item => item.id === entry.paper.id && item.deletedAt === entry.deletedAt)) : operation.type === "note" ? verified.deskNote?.text === operation.text : operation.type === "pause" ? pauseFor(verified, day(operation.at))?.reason === operation.reason.trim()
           : operation.type === "resume" ? !pauseFor(verified, day(operation.at))
           : operation.type === "undo" ? paper && !isComplete(paper) && !paper.stages[operation.index]
           : operation.type === "stage" ? Boolean(paper?.stages[operation.index]) : Boolean(paper);

@@ -48,7 +48,7 @@ dialog{max-width:460px;width:calc(100% - 30px);padding:21px;border:1px solid var
 .book-help{font-size:10px;color:var(--muted);margin:1px 0 3px}.pause-panel{margin-top:0}.trash-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow:auto}.trash-entry{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px;border:1px solid var(--line);border-radius:7px}.trash-entry span{font-size:12px;overflow-wrap:anywhere}.trash-entry small{display:block;color:var(--muted);margin-top:4px;font-size:10px}.trash-entry button{flex:none}
 @media(max-width:700px){.sticky-note{grid-column:1/-1;min-height:160px;margin:8px 1px 3px}.book-help{grid-column:1/-1}}
 </style>
-<script src="Paper_data.js?v=reading-v4"></script>
+<script src="Paper_data.js?v=reading-v5"></script>
 </head>
 <body>
 <main class="card">
@@ -59,11 +59,11 @@ dialog{max-width:460px;width:calc(100% - 30px);padding:21px;border:1px solid var
 <label class="drop" id="drop" tabindex="0" role="button" aria-label="上传待读论文 PDF"><span aria-hidden="true">＋</span><span>拖入 PDF 或点击上传</span><small>可一次上传多篇</small><input id="files" type="file" accept="application/pdf,.pdf" multiple hidden></label>
 <p class="filename-note">默认使用 PDF 文件名。<br>命名：论文名称_期刊或会议_年份.pdf<br>书脊只显示论文名称。</p>
 <label for="paper-select">当前阅读</label><select id="paper-select" aria-label="选择当前阅读论文"></select>
-<section class="sticky-note" aria-labelledby="desk-note-title"><div class="sticky-heading"><h3 id="desk-note-title">阅读便签</h3><span aria-hidden="true">✎</span></div><textarea id="desk-note" aria-label="阅读便签内容" maxlength="4000" placeholder="记下阅读重点、待解决的问题，或下一步安排……"></textarea><div class="sticky-footer"><span id="note-save-status" role="status" aria-live="polite">保存后同步到 GitHub</span><button id="save-note" type="button">保存便签</button></div><button id="load-note" class="note-load" type="button" hidden>载入已保存版本</button></section>
+<section class="sticky-note" aria-labelledby="desk-note-title"><div class="sticky-heading"><h3 id="desk-note-title">停止阅读原因</h3><span aria-hidden="true">✎</span></div><textarea id="desk-note" aria-label="停止阅读原因内容" maxlength="500" placeholder="例如：今天有实验安排，暂停论文阅读……"></textarea><div class="sticky-footer"><span id="note-save-status" role="status" aria-live="polite">保存后同步到热力图</span><button id="save-note" type="button">保存原因并停止</button></div><button id="load-note" class="note-load" type="button" hidden>载入已保存版本</button></section>
 <p class="book-help">书桌与书架上的书，右键可删除。</p>
 <div class="pause-panel"><button id="stop-reading" class="small-button stop-button" type="button">停止阅读</button><p id="pause-status" class="filename-note">今天读不了时，填写原因后停止。未打卡原因会显示在热力图悬停说明中。</p><button id="resume-reading" class="small-button" type="button" hidden>继续阅读</button></div>
 </aside>
-<div class="bookroom"><iframe id="shelf" src="Paper_shelf.html?v=reading-v4" title="论文书桌与书架"></iframe>
+<div class="bookroom"><iframe id="shelf" src="Paper_shelf.html?v=reading-v5" title="论文书桌与书架"></iframe>
 <section class="reading" aria-label="五阶段论文阅读">
 <div class="reading-title"><h2 id="paper-title">正在读取论文…</h2><div class="reading-links"><button id="read-again" class="small-button" type="button" hidden>放回书桌重读</button><a id="open-pdf" target="_blank" rel="noopener" hidden>打开 PDF</a></div></div>
 <div class="stages" id="stages"></div>
@@ -73,8 +73,8 @@ dialog{max-width:460px;width:calc(100% - 30px);padding:21px;border:1px solid var
 </div>
 <p class="status" id="status" role="status" aria-live="polite"></p>
 </main>
-<dialog id="trash-dialog" aria-labelledby="trash-title"><h2 id="trash-title">回收站</h2><p>删除时会同步移除 GitHub 当前分支的 PDF 和阅读记录。这里可同时恢复 PDF、阅读阶段和上架状态。</p><div id="trash-list" class="trash-list"></div><p id="trash-error" class="dialog-error" role="alert"></p><div class="dialog-actions"><button class="small-button" id="trash-close" type="button">关闭</button></div></dialog>
-<dialog id="pause-dialog" aria-labelledby="pause-title"><h2 id="pause-title">停止今天的阅读</h2><p>仅暂停今天，已完成阶段保留。今天没有阅读记录时，热力图会显示未打卡原因；已有打卡会保留，并附上暂停原因。次日可正常继续。</p><label for="pause-reason">停止原因</label><textarea id="pause-reason" maxlength="500" rows="3" placeholder="例如：今天有实验安排，暂停论文阅读"></textarea><p id="pause-error" class="dialog-error" role="alert"></p><div class="dialog-actions"><button id="pause-cancel" class="small-button" type="button">取消</button><button id="pause-save" class="small-button primary" type="button">保存原因并停止</button></div></dialog>
+<dialog id="trash-dialog" aria-labelledby="trash-title"><h2 id="trash-title">回收站</h2><p>删除时会同步移除 GitHub 当前分支的 PDF 和阅读记录。这里可同时恢复 PDF、阅读阶段和上架状态。</p><div id="trash-list" class="trash-list"></div><p id="trash-error" class="dialog-error" role="alert"></p><div class="dialog-actions"><button class="small-button stop-button" id="clear-trash" type="button">清空回收站</button><button class="small-button" id="trash-close" type="button">关闭</button></div></dialog>
+<dialog id="clear-trash-dialog" aria-labelledby="clear-trash-title"><h2 id="clear-trash-title">清空回收站</h2><p id="clear-trash-description"></p><p>清空后不能从此页面恢复 PDF 和阅读记录。Git 提交历史仍保留。</p><p id="clear-trash-error" class="dialog-error" role="alert"></p><div class="dialog-actions"><button id="clear-trash-cancel" class="small-button" type="button">取消</button><button id="clear-trash-confirm" class="small-button stop-button" type="button">确认清空</button></div></dialog>
 <dialog id="undo-dialog" aria-labelledby="undo-title"><h2 id="undo-title">撤回阅读阶段</h2><p id="undo-description"></p><p id="undo-error" class="dialog-error" role="alert"></p><div class="dialog-actions"><button id="undo-cancel" class="small-button" type="button">取消</button><button id="undo-confirm" class="small-button primary" type="button">确认撤回</button></div></dialog>
 <dialog id="connection" aria-labelledby="connection-title">
 <h2 id="connection-title">连接 GitHub</h2>
@@ -223,35 +223,33 @@ async function uploadFiles(files) {
   finally { busy = false; render(); }
 }
 function renderNoteAndTrash() {
-  const saved = state.deskNote || {text:"",updatedAt:""};
-  if (!noteDirty) { $("desk-note").value = saved.text; noteBaseAt = saved.updatedAt; }
-  $("load-note").hidden = !noteDirty || noteBaseAt === saved.updatedAt;
-  $("note-save-status").textContent = noteDirty ? "有未保存的修改" : saved.updatedAt ? "已同步 GitHub · " + PaperData.day(saved.updatedAt).slice(5) : "保存后同步到 GitHub";
+  const pause = PaperData.pauseFor(state);
+  if (!noteDirty) $("desk-note").value = pause?.reason || "";
+  $("load-note").hidden = true;
+  $("note-save-status").textContent = noteDirty ? "原因尚未保存" : pause ? "已停止 · 原因已同步热力图" : "填写原因后保存，热力图悬停可查看";
   $("show-trash").textContent = "回收站（" + (state.deletedPapers?.length || 0) + "）";
   if ($("trash-dialog").open) renderTrash();
 }
 $("desk-note").addEventListener("input",()=>{
-  noteDirty = $("desk-note").value !== (state?.deskNote?.text || "");
+  noteDirty = $("desk-note").value !== (PaperData.pauseFor(state)?.reason || "");
   $("save-note").disabled = busy || !state || !noteDirty;
-  $("note-save-status").textContent = noteDirty ? "有未保存的修改" : "已同步 GitHub";
+  $("note-save-status").textContent = noteDirty ? "原因尚未保存" : "原因已同步热力图";
 });
-$("save-note").addEventListener("click",async()=>{
-  if (busy || !state || !noteDirty) return;
-  if (!PaperData.token()) {$("connection").showModal();return;}
-  const text = $("desk-note").value;
-  busy = true; render(); $("note-save-status").textContent = "正在保存…";
-  try {
-    state = await PaperData.commitOperation({type:"note",text,expectedNoteAt:noteBaseAt,at:new Date().toISOString()});
-    noteDirty = false; message("阅读便签已保存到 GitHub。");
-  } catch(error) { try { state=await PaperData.load(); } catch(refreshError) {} message(error.message,true); }
-  finally { busy=false;render(); }
-});
-$("load-note").addEventListener("click",async()=>{
-  if(busy)return;
-  try { state=await PaperData.load();noteDirty=false;render(); } catch(error){message(error.message,true);}
-});
+async function saveStopReason() {
+  if(busy || !state)return;
+  if(!PaperData.token()){$("connection").showModal();return;}
+  const reason=$("desk-note").value.trim();
+  if(!reason){message("请在便签中填写停止阅读的原因。",true);$("desk-note").focus();return;}
+  busy=true;render();
+  try {state=await PaperData.commitOperation({type:"pause",reason,at:new Date().toISOString()});noteDirty=false;message("已停止今天的阅读，原因已同步到热力图的悬停说明。");}
+  catch(error){message(error.message,true);}
+  finally{busy=false;render();}
+}
+$("save-note").addEventListener("click",saveStopReason);
+$("load-note").addEventListener("click",()=>{});
 function renderTrash() {
   const entries = state?.deletedPapers || [];
+  $("clear-trash").disabled = busy || !entries.length;
   const rows = entries.map(entry=>{
     const row=document.createElement("div");row.className="trash-entry";
     const text=document.createElement("span");text.textContent=entry.paper.title;
@@ -274,7 +272,25 @@ async function restorePaper(entry) {
 $("show-trash").addEventListener("click",()=>{renderTrash();$("trash-error").textContent="";$("trash-dialog").showModal();});
 $("trash-close").addEventListener("click",()=>$("trash-dialog").close());
 
-function reloadShelf() { $("shelf").src = "Paper_shelf.html?v=reading-v4&revision=" + (state?.revision ?? 0) + "&refresh=" + Date.now(); }
+let trashToClear = [];
+$("clear-trash").addEventListener("click",()=>{
+  trashToClear=(state?.deletedPapers || []).map(entry=>({id:entry.paper.id,deletedAt:entry.deletedAt}));
+  if(!trashToClear.length)return;
+  $("trash-dialog").close();$("clear-trash-error").textContent="";
+  $("clear-trash-description").textContent="将清空 "+trashToClear.length+" 篇论文的恢复记录。";
+  $("clear-trash-dialog").showModal();
+});
+$("clear-trash-cancel").addEventListener("click",()=>{$("clear-trash-dialog").close();renderTrash();$("trash-dialog").showModal();});
+$("clear-trash-confirm").addEventListener("click",async()=>{
+  if(busy)return;
+  if(!PaperData.token()){$("clear-trash-dialog").close();$("connection").showModal();return;}
+  busy=true;render();$("clear-trash-confirm").disabled=true;$("clear-trash-cancel").disabled=true;
+  try{state=await PaperData.commitOperation({type:"clear-trash",entries:trashToClear,at:new Date().toISOString()});$("clear-trash-dialog").close();message("回收站已清空，并同步到 GitHub。");}
+  catch(error){$("clear-trash-error").textContent=error.message;}
+  finally{busy=false;render();$("clear-trash-confirm").disabled=false;$("clear-trash-cancel").disabled=false;}
+});
+$("clear-trash-dialog").addEventListener("cancel",event=>{if(busy)event.preventDefault();});
+function reloadShelf() { $("shelf").src = "Paper_shelf.html?v=reading-v5&revision=" + (state?.revision ?? 0) + "&refresh=" + Date.now(); }
 function askUndo(paper, index) {
   pendingUndo = {type:"undo",paperId:paper.id,index,expectedStages:JSON.stringify(paper.stages)};
   $("undo-error").textContent = "";
@@ -291,21 +307,7 @@ $("undo-confirm").addEventListener("click",async()=>{
   finally{busy=false;render();$("undo-confirm").disabled=false;}
 });
 $("read-again").addEventListener("click",()=>{const paper=state?.papers.find(p=>p.id===selected);if(paper)askUndo(paper,0);});
-$("stop-reading").addEventListener("click",()=>{
-  if (!PaperData.token()) {$("connection").showModal();return;}
-  $("pause-reason").value=PaperData.pauseFor(state)?.reason || "";
-  $("pause-error").textContent="";$("pause-dialog").showModal();
-});
-$("pause-cancel").addEventListener("click",()=>$("pause-dialog").close());
-$("pause-save").addEventListener("click",async()=>{
-  if(busy)return;
-  const reason=$("pause-reason").value.trim();
-  if(!reason){$("pause-error").textContent="请填写停止阅读的原因。";return;}
-  busy=true;render();$("pause-save").disabled=true;
-  try{state=await PaperData.commitOperation({type:"pause",reason,at:new Date().toISOString()});$("pause-dialog").close();message("已记录今天的停止原因，热力图悬停可查看。");}
-  catch(error){$("pause-error").textContent=error.message;}
-  finally{busy=false;render();$("pause-save").disabled=false;}
-});
+$("stop-reading").addEventListener("click",saveStopReason);
 $("resume-reading").addEventListener("click",async()=>{
   if(busy)return;
   if(!PaperData.token()){$("connection").showModal();return;}

@@ -219,22 +219,10 @@ h1{margin:0;font-size:18px;font-weight:800;color:var(--strong);white-space:nowra
    title：书脊上显示的论文名
    pdf：PDF 在仓库里的路径（把 PDF 上传到同一仓库的 papers 文件夹）
    date：读完的日期 YYYY-MM-DD（Paper_heatmap.html 和 Paper_Record 文件夹里的组件会自动读取它） */
-const PAPERS = [
-  {
-    "title": "main",
-    "pdf": "papers/fe3ac8cbe50c7db69843ccafe39d1e51cf915c2d1ac7eb6b3ca932a83982bdf0.pdf",
-    "date": "2026-11-18"
-  }
-];
+const PAPERS = [];
 /* ================= 打算读、还没读完的论文放在 TO_READ（摆在书桌上） =================
    读完后把那一行从 TO_READ 剪切到 PAPERS 末尾并补上 date，下次打开时它会从书桌飞上书架 */
-const TO_READ = [
-  {
-    "title": "UR&R_CVPR_2021",
-    "pdf": "papers/unsupervised_rr.pdf",
-    "date": "2026-11-01"
-  }
-];
+const TO_READ = [];
 /* ===================================================================== */
 (async () => {
 const sharedState = await PaperData.load();

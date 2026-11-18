@@ -1,22 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 12,
-  "updatedAt": "2026-11-18T10:10:36.747Z",
+  "revision": 13,
+  "updatedAt": "2026-11-18T10:33:29.816Z",
   "legacyReadDates": [],
   "papers": [
-    {
-      "id": "legacy-unsupervised-rr",
-      "title": "UR&R_CVPR_2021",
-      "pdf": "papers/unsupervised_rr.pdf",
-      "addedAt": "2026-11-01T04:00:00.000Z",
-      "stages": [
-        null,
-        null,
-        null,
-        null,
-        null
-      ]
-    },
     {
       "id": "paper-fe3ac8cbe50c7db69843ccafe39d1e51cf915c2d1ac7eb6b3ca932a83982bdf0",
       "title": "main",
@@ -63,6 +50,29 @@
           "at": "2026-11-18T09:37:49.930Z"
         }
       ]
+    }
+  ],
+  "deletedPapers": [
+    {
+      "paper": {
+        "id": "legacy-unsupervised-rr",
+        "title": "UR&R_CVPR_2021",
+        "pdf": "papers/unsupervised_rr.pdf",
+        "addedAt": "2026-11-01T04:00:00.000Z",
+        "stages": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "position": 0,
+      "deletedAt": "2026-11-18T10:33:29.816Z",
+      "pdfBackup": {
+        "path": "PaPer/papers/unsupervised_rr.pdf",
+        "sha": "ce52cf9d48b23f4525dfe0b4137551991b331193"
+      }
     }
   ]
 }

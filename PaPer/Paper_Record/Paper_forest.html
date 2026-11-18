@@ -32,7 +32,7 @@ h1{margin:0;color:var(--strong);font-size:18px;font-weight:800;letter-spacing:.2
 .tabs button[aria-pressed="true"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:650}
 .scope{font-size:12px;color:var(--muted)}
 .land{overflow:hidden;border-radius:10px;background:#223d34}
-.stage{position:relative;isolation:isolate;aspect-ratio:16/9;max-height:400px;overflow:hidden}
+.stage{position:relative;isolation:isolate;width:100%;aspect-ratio:16/9;overflow:hidden}
 .landscape{display:block;width:100%;height:100%;position:absolute;inset:0;object-fit:fill;filter:saturate(.83) brightness(.91)}
 .stage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1500;background:linear-gradient(180deg,#193c342a,transparent 38%,#203a3110)}
 .trees{list-style:none;margin:0;padding:0;position:absolute;inset:0}
@@ -63,6 +63,7 @@ h1{margin:0;color:var(--strong);font-size:18px;font-weight:800;letter-spacing:.2
 .progress{display:block;width:100%;height:5px;margin-top:7px;accent-color:var(--accent)}
 .status{margin:9px 0 0;font-size:12px;line-height:1.6;color:#a54d30}
 noscript p{margin:8px 0;font-size:12px}
+@media(min-width:900px){.forest-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(250px,1fr);gap:10px;align-items:start}.tabs{display:none}#forest-view[hidden],#guide-view[hidden]{display:block!important}.guide{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.species{padding:6px 4px}.species img{width:48px;height:49px}.milestone{margin-top:8px}}
 @media(max-width:560px){.card{padding:10px}.heading{gap:7px}.tools{margin-left:auto}.segment button,.refresh{padding:5px 8px}.guide{grid-template-columns:repeat(3,minmax(0,1fr))}.stage{min-height:185px}.empty{padding:6px 9px;font-size:11px}.count{font-size:11px}.count strong{font-size:13px}}
 @media(max-width:350px){.heading{width:100%;justify-content:space-between}.tools{width:100%;justify-content:space-between}.guide{grid-template-columns:repeat(2,minmax(0,1fr))}.species img{width:54px;height:54px}}
 @media(prefers-reduced-motion:reduce){.tree img,.tree.growing img{animation:none}}
@@ -88,6 +89,7 @@ noscript p{margin:8px 0;font-size:12px}
     </div>
     <span class="scope" id="scope" aria-live="polite">正在读取论文书架…</span>
   </div>
+  <div class="forest-layout">
   <section class="land" id="forest-view" aria-label="论文森林">
     <div class="stage">
       <img class="landscape" id="landscape" alt="暮色溪畔的林地，远处是石屋和层叠山丘" width="1504" height="846">
@@ -108,6 +110,7 @@ noscript p{margin:8px 0;font-size:12px}
     <p class="milestone" id="milestone"></p>
     <progress class="progress" id="progress" aria-label="下一个树种的解锁进度" hidden></progress>
   </section>
+  </div>
   <p class="status" id="status" role="alert" hidden></p>
   <noscript><p>请在支持 JavaScript 的浏览器中打开。</p></noscript>
 </main>

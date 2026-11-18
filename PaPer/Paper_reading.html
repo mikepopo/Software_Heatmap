@@ -14,18 +14,26 @@
 .receiver input[type=text],.receiver select{width:100%;min-width:0;padding:8px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--surface);font-size:12px}
 .drop{display:flex;min-height:130px;flex-direction:column;align-items:center;justify-content:center;gap:9px;border:1.5px dashed #7ca99a;border-radius:9px;background:var(--surface);color:var(--accent);cursor:pointer;text-align:center;padding:12px;font-size:13px}
 .drop.dragging{box-shadow:inset 0 0 0 3px #56a58d55}.drop span:first-child{font-size:29px}.drop small{font-size:11px;color:var(--muted);line-height:1.5}.receiver .repository{font-size:10px;line-height:1.6;color:var(--muted);overflow-wrap:anywhere}
-.bookroom{min-width:0}.bookroom iframe{display:block;width:100%;height:330px;border:0;border-radius:10px;background:transparent}
-.reading{margin-top:13px;padding:12px 14px 14px;border:1px solid var(--line);border-radius:10px;background:linear-gradient(135deg,var(--surface),var(--tint))}
-.reading-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}.reading-title h2{margin:0;font-size:14px;overflow-wrap:anywhere}.reading-title a{font-size:12px;color:var(--accent);text-underline-offset:3px}
+.bookroom{display:flex;flex-direction:column;gap:10px;min-width:0;min-height:0}.bookroom iframe{display:block;flex:0 0 auto;width:100%;height:250px;border:0;border-radius:10px;background:transparent}
+.reading{display:flex;flex:1;flex-direction:column;justify-content:center;min-width:0;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:linear-gradient(135deg,var(--surface),var(--tint))}
+.reading-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px}.reading-title h2{margin:0;font-size:14px;overflow-wrap:anywhere}.reading-title a{font-size:12px;color:var(--accent);text-underline-offset:3px}
 .stages{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:start;text-align:center}
-.switch{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}.mount{padding:7px;border-radius:50%;background:linear-gradient(145deg,#d7dce0,#78818b);box-shadow:0 2px 3px #15202540,inset 0 1px 1px #fff;display:inline-flex}
-.stage-button{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;width:92px;height:92px;border-radius:50%;border:1px solid #761917;background:radial-gradient(ellipse at 34% 23%,#f97870 0,#d9332c 36%,#a41819 80%);color:#fffaf2;font-size:11px;font-weight:750;line-height:1.4;text-shadow:0 1px 1px #6e1717;padding:7px;box-shadow:inset 0 2px 3px #ffc5b166,inset 0 -3px 4px #630b0c99,0 5px 0 #6e1717,0 7px 7px #17232670;transition:transform .12s,box-shadow .12s,filter .15s}
+.switch{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}.mount{padding:5px;border-radius:50%;background:linear-gradient(145deg,#d7dce0,#78818b);box-shadow:0 2px 3px #15202540,inset 0 1px 1px #fff;display:inline-flex}
+.stage-button{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;width:72px;height:72px;border-radius:50%;border:1px solid #761917;background:radial-gradient(ellipse at 34% 23%,#f97870 0,#d9332c 36%,#a41819 80%);color:#fffaf2;font-size:9px;font-weight:750;line-height:1.35;text-shadow:0 1px 1px #6e1717;padding:7px;box-shadow:inset 0 2px 3px #ffc5b166,inset 0 -3px 4px #630b0c99,0 5px 0 #6e1717,0 7px 7px #17232670;transition:transform .12s,box-shadow .12s,filter .15s}
 .stage-button:enabled:hover{filter:brightness(1.08)}.stage-button:active,.stage-button[aria-pressed=true]{transform:translateY(4px);box-shadow:inset 0 2px 6px #59090b99,inset 0 -1px 2px #ffaca655,0 1px 0 #6e1717,0 2px 3px #17232650}
 .stage-button:disabled:not([aria-pressed=true]){filter:saturate(.55) brightness(.6);cursor:default}.stage-date{font-size:11px;color:var(--muted);min-height:16px}.stage-date.done{color:var(--accent);font-weight:650}
-.note{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.6}.status{margin:9px 0 0;font-size:12px;line-height:1.6;color:var(--accent);overflow-wrap:anywhere}.status.error{color:#bd3932}
+.note{margin:9px 0 0;color:var(--muted);font-size:12px;line-height:1.6}.status{margin:9px 0 0;font-size:12px;line-height:1.6;color:var(--accent);overflow-wrap:anywhere}.status.error{color:#bd3932}
 dialog{max-width:460px;width:calc(100% - 30px);padding:21px;border:1px solid var(--line);border-radius:13px;background:var(--surface);color:var(--ink);box-shadow:0 18px 70px #0005}dialog::backdrop{background:#142f2d77}dialog h2{margin:0 0 10px;font-size:18px}dialog p{font-size:12px;line-height:1.8;color:var(--muted)}dialog input{width:100%;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}dialog a{color:var(--accent)}.dialog-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:13px}.primary{background:var(--accent);color:var(--surface)}.dialog-error{color:#bd3932}
-@media(max-width:850px){.workspace{grid-template-columns:190px minmax(0,1fr)}.receiver{padding:10px}.bookroom iframe{height:330px}.stage-button{width:76px;height:76px;font-size:10px}.stages{gap:7px}.mount{padding:5px}}
-@media(max-width:600px){.card{padding:10px}.workspace{grid-template-columns:1fr}.receiver{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.receiver h2,.receiver .repository{grid-column:1/-1}.drop{grid-row:span 3;min-height:125px}.bookroom iframe{height:310px}.reading{padding:12px 8px}.stages{gap:10px 3px;grid-template-columns:repeat(3,minmax(0,1fr))}.stage-button{width:82px;height:82px}.note{font-size:11px}}
+@media(max-width:850px){.workspace{grid-template-columns:190px minmax(0,1fr)}.receiver{padding:10px}.stage-button{width:64px;height:64px;font-size:8px;padding:4px}.stages{gap:7px}.mount{padding:5px}}
+@media(max-width:700px){.card{padding:10px}.workspace{grid-template-columns:1fr}.receiver{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.receiver h2,.receiver .repository{grid-column:1/-1}.drop{grid-row:span 3;min-height:125px}.reading{padding:12px 8px}.stages{gap:10px 3px;grid-template-columns:repeat(3,minmax(0,1fr))}.stage-button{width:72px;height:72px;font-size:9px}.note{font-size:11px}}
+
+.stage-button[aria-pressed=true]{border-color:#145334;background:radial-gradient(ellipse at 34% 23%,#82dc9e 0,#2d9b60 40%,#17603f 85%);text-shadow:0 1px 1px #16442d;box-shadow:inset 0 2px 6px #0e422b80,inset 0 -1px 2px #c5ffcf66,0 1px 0 #154d31,0 2px 3px #17232650}
+.mount.done{background:linear-gradient(145deg,#c5d9cd,#6a8f7a)}
+.completion-label{margin-top:3px;font-size:8px;font-weight:800;line-height:1.1;white-space:nowrap}
+.stage-date.done{font-variant-numeric:tabular-nums}
+.celebration-layer{position:fixed;inset:0;z-index:200;overflow:hidden;pointer-events:none}
+.confetti-piece{position:absolute;left:0;top:0;width:6px;height:10px;border-radius:1px;animation:paper-celebration 1.65s var(--delay) cubic-bezier(.17,.65,.45,1) both}
+@keyframes paper-celebration{0%{opacity:0;transform:translate(var(--start-x),var(--start-y)) rotate(0deg)}8%{opacity:1}40%{opacity:1;transform:translate(calc(var(--start-x) + var(--half-drift)),calc(var(--start-y) - var(--lift))) rotate(var(--half-spin))}100%{opacity:0;transform:translate(calc(var(--start-x) + var(--drift)),calc(var(--start-y) + var(--fall))) rotate(var(--spin))}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <script src="Paper_data.js"></script>
@@ -41,13 +49,14 @@ dialog{max-width:460px;width:calc(100% - 30px);padding:21px;border:1px solid var
 <label for="paper-select">当前阅读</label><select id="paper-select" aria-label="选择当前阅读论文"></select>
 <div class="repository">上传至公开仓库<br>mikepopo/Software_Heatmap<br>PDF 保存在 PaPer/papers</div>
 </aside>
-<div class="bookroom"><iframe id="shelf" src="Paper_shelf.html?v=reading-v1" title="论文书桌与书架"></iframe></div>
-</div>
+<div class="bookroom"><iframe id="shelf" src="Paper_shelf.html?v=reading-v2" title="论文书桌与书架"></iframe>
 <section class="reading" aria-label="五阶段论文阅读">
 <div class="reading-title"><h2 id="paper-title">正在读取论文…</h2><a id="open-pdf" target="_blank" rel="noopener" hidden>打开 PDF</a></div>
 <div class="stages" id="stages"></div>
 <p class="note" id="note">按阅读顺序确认完成阶段，当天会自动记录一次阅读打卡。</p>
 </section>
+</div>
+</div>
 <p class="status" id="status" role="status" aria-live="polite"></p>
 </main>
 <dialog id="connection" aria-labelledby="connection-title">
@@ -96,13 +105,15 @@ function render() {
     const mount = document.createElement("div"); mount.className = "mount";
     const button = document.createElement("button"); button.type = "button"; button.className = "stage-button";
     const done = Boolean(paper && (paper.completedDate || paper.stages[index]));
+    mount.classList.toggle("done", done);
     button.setAttribute("aria-pressed", String(done));
     button.setAttribute("aria-label", lines.join("、") + (done ? "，已完成" : ""));
     button.disabled = busy || !paper || done || index !== next;
     for (const line of lines) { const span = document.createElement("span"); span.textContent = line; button.append(span); }
+    if (done) { const completed = document.createElement("span"); completed.className = "completion-label"; completed.textContent = "✓ 已完成"; button.append(completed); }
     button.addEventListener("click", () => markStage(index));
     const date = document.createElement("span"); date.className = "stage-date" + (done ? " done" : "");
-    date.textContent = paper?.stages[index] ? PaperData.day(paper.stages[index].at) : done ? "已完成" : index === next ? "当前阶段" : "待完成";
+    date.textContent = paper?.stages[index] ? PaperData.day(paper.stages[index].at).slice(5) : done ? "已完成" : index === next ? "当前阶段" : "待完成";
     mount.append(button); wrapper.append(mount, date); return wrapper;
   }));
   $("note").textContent = paper && PaperData.isComplete(paper)
@@ -113,17 +124,48 @@ async function refresh() {
   if (busy) return;
   try { state = await PaperData.load(); render(); message(""); } catch (error) { message(error.message, true); }
 }
+function celebrate(index) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const button = $("stages").querySelectorAll(".stage-button")[index];
+  if (!button) return;
+  const bounds = button.getBoundingClientRect();
+  const layer = document.createElement("div");
+  layer.className = "celebration-layer";
+  layer.setAttribute("aria-hidden", "true");
+  const colors = ["#e4b752", "#69bf94", "#ef8c93", "#78b9d4", "#c6a2db", "#f5d978"];
+  for (let i = 0; i < 44; i++) {
+    const piece = document.createElement("i");
+    piece.className = "confetti-piece";
+    piece.style.background = colors[i % colors.length];
+    piece.style.setProperty("--start-x", bounds.left + bounds.width / 2 + "px");
+    piece.style.setProperty("--start-y", bounds.top + bounds.height / 3 + "px");
+    const drift = (Math.random() - .5) * 350;
+    piece.style.setProperty("--drift", drift + "px");
+    piece.style.setProperty("--half-drift", drift * .55 + "px");
+    piece.style.setProperty("--lift", 65 + Math.random() * 80 + "px");
+    piece.style.setProperty("--fall", 100 + Math.random() * 120 + "px");
+    piece.style.setProperty("--half-spin", (Math.random() - .5) * 380 + "deg");
+    piece.style.setProperty("--spin", (Math.random() - .5) * 1000 + "deg");
+    piece.style.setProperty("--delay", Math.random() * .12 + "s");
+    layer.append(piece);
+  }
+  document.body.append(layer);
+  setTimeout(() => layer.remove(), 1900);
+}
 async function markStage(index) {
   if (!state || busy) return;
   if (!PaperData.token()) { $("connection").showModal(); return; }
   const paper = state.papers.find(item => item.id === selected);
-  if (!paper) return;
+  if (!paper || PaperData.isComplete(paper) || paper.stages[index] || index !== paper.stages.findIndex(stage => !stage)) return;
+  let confirmed = false;
   busy = true; render(); message("正在同步阅读进度…");
   try {
     state = await PaperData.commitOperation({ type: "stage", paperId: paper.id, index, at: new Date().toISOString() });
+    confirmed = Boolean(state.papers.find(item => item.id === paper.id)?.stages[index]);
     message(index === 4 ? "已完成整篇阅读，论文已上架，并更新今日打卡。" : "已确认该阶段，今日阅读已记录。");
   } catch (error) { message(error.message, true); }
   finally { busy = false; render(); }
+  if (confirmed) celebrate(index);
 }
 async function uploadFiles(files) {
   if (busy || !files.length) return;
@@ -162,6 +204,22 @@ $("save-token").addEventListener("click", async () => {
   } catch (error) { $("connection-error").textContent = error.message; }
   finally { $("save-token").disabled = false; }
 });
+let shelfObserver;
+function fitShelf() {
+  shelfObserver?.disconnect();
+  const frame = $("shelf");
+  const card = frame.contentDocument?.querySelector("main.card");
+  if (!card) return;
+  const update = () => {
+    const height = Math.max(180, Math.ceil(card.getBoundingClientRect().height) + 2);
+    if (frame.style.height !== height + "px") frame.style.height = height + "px";
+  };
+  update();
+  shelfObserver = new ResizeObserver(update);
+  shelfObserver.observe(card);
+}
+$("shelf").addEventListener("load", fitShelf);
+fitShelf();
 PaperData.watch(next => { state = next; render(); });
 render(); refresh();
 </script>

@@ -139,12 +139,14 @@ h1{margin:0;font-size:18px;font-weight:800;color:var(--strong);white-space:nowra
 @media(max-width:560px){h1{font-size:15.5px}.card{padding:12px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-/* Readable pending-paper spines on the desk. */
-.pile{width:76%;max-width:190px;left:2%;max-height:155px;overflow-y:auto;overflow-x:hidden;padding:3px}
-.pile .fb{width:100%;height:20px;min-height:20px;--dx:0px;--rt:0deg;text-align:left}
-.pile .fb::after{display:none}
-.pile .fb span{display:block;padding:3px 7px;font-size:10px;line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.small .pile{width:85%}.small .pile .fb{height:18px;min-height:18px}.small .pile .fb span{font-size:9px;padding:2px 5px}
+/* Small, closed books with separate covers, spines and page edges. */
+.pile{width:104px;left:2%;max-height:none;overflow:visible;padding:2px 0 0;gap:2px}
+.pile .fb{width:var(--bw);height:12px;min-height:12px;margin:1px 0 0;border-radius:2px 3px 3px 2px;overflow:visible;text-align:left;background:linear-gradient(90deg,var(--c) 0 calc(100% - 8px),#e9dfc7 calc(100% - 8px) calc(100% - 2px),var(--c) calc(100% - 2px));box-shadow:inset 2px 0 2px #0003,inset 0 -1px 0 #0005,0 2px 2px #0006}
+.pile .fb::before{content:"";position:absolute;left:0;right:0;top:-2px;height:3px;border-radius:2px 3px 0 0;background:var(--c);box-shadow:inset 0 1px 0 #ffffff66;transform:skewX(-12deg);transform-origin:left bottom}
+.pile .fb::after{content:"";position:absolute;left:auto;right:3px;top:2px;width:5px;height:8px;background:repeating-linear-gradient(0deg,#c1b89f 0 1px,#f2e8d0 1px 3px);opacity:1;border-radius:0 1px 1px 0}
+.pile .fb span{display:block;padding:1px 11px 1px 5px;font-size:8px;line-height:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1}
+.pile .more{position:absolute;left:calc(100% + 3px);bottom:1px;margin:0;font-size:9px;line-height:13px;padding:0 3px;animation:none}
+.small .pile{width:72px}.small .pile .fb{height:10px;min-height:10px}.small .pile .fb span{padding:0 9px 0 4px;font-size:7px;line-height:10px}.small .pile .fb::after{height:6px}
 </style>
 <script src="Paper_data.js"></script>
 </head>
@@ -301,12 +303,13 @@ function layout() {
 function room(S, small) {
   const sc = $("scene"), H = sc.clientHeight, deskY = H - 6 - (small ? 42 : 54), dw = S * .9, k = small ? .72 : 1;
   // 台灯在书桌右侧；摊开的书和杯子跟着灯走，让暖光正好落在书上；书桌左侧留给待读的那摞书
-  const lampX = dw * .84, pileR = dw * .04 + (small ? 30 : 41), bookW = small ? 30 : 60, mugW = small ? 14 : 16, baseL = lampX - 11 * k;
-  const bookL = clamp(lampX - 73.5 * k - bookW / 2, pileR + 6, baseL - 6 - bookW), gap = baseL - bookL - bookW;
+  const lampX = dw * .84, pileR = dw * .04 + (small ? 72 : 104), bookW = small ? 30 : 60, mugW = small ? 14 : 16, baseL = lampX - 11 * k;
+  const bookL = Math.min(baseL - 6 - bookW, Math.max(pileR + 6, lampX - 73.5 * k - bookW / 2)), gap = baseL - bookL - bookW;
   sc.classList.toggle("no-book", bookL < pileR + 5); sc.classList.toggle("no-mug", gap < mugW + 10);
   const winW = Math.round(Math.min(S * (small ? .48 : .38), small ? 78 : 126));
   const winL = Math.round(small ? S * .13 : Math.max(S * .16, S * .076 + 49));        // 窗户避开书桌上那摞书
-  const winT = small ? 12 : 14, winH = Math.round(Math.max(36, Math.min(winW * 1.12, small ? deskY - 41 - winT : deskY - 40)));
+  const stackHeight = Math.min(desk.length, 3) * (small ? 13 : 15) + 5;
+  const winT = small ? 12 : 14, winH = Math.round(Math.max(28, Math.min(winW * 1.12, deskY - stackHeight - winT - 8)));
   Object.entries({ "--deskY": deskY, "--winW": winW, "--winH": winH, "--winT": winT, "--winL": winL, "--lampX": lampX, "--bookL": bookL, "--mugL": bookL + bookW + (gap - mugW) / 2 })
     .forEach(([k, v]) => sc.style.setProperty(k, Math.round(v) + "px"));
 }
@@ -329,9 +332,9 @@ function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<":
 
 function header() {
   $("count").innerHTML = `已上架 <b>${n}</b> 篇 · 书桌待读 <b>${m}</b>`;
-  const small = $("scene").clientWidth < 520, DESK_MAX = small ? 4 : 8, show = desk.slice(0, DESK_MAX);
+  const small = $("scene").clientWidth < 520, DESK_MAX = 3, show = desk.slice(0, DESK_MAX);
   $("pile").innerHTML = show.map((b, i) => { const h = hash(b.title), [c, t] = PALETTE[h % PALETTE.length], lab = esc(`${b.title}，待读${b.pdf ? "，打开 PDF" : ""}`);
-    const st = `--bw:${(small ? 21 : 29) + h % (small ? 6 : 9)}px;--bh:${(small ? 5 : 6) + h % 3}px;--c:${c};--t:${t};--dx:${h % 5}px;--rt:${(h % 5) - 2}deg;--i:${i}`;
+    const st = `--bw:${(small ? 65 : 94) + h % (small ? 5 : 9)}px;--bh:${small ? 10 : 12}px;--c:${c};--t:${t};--dx:${h % 5}px;--rt:${(h % 5) - 2}deg;--i:${i}`;
     return b.pdf ? `<a class="fb" data-d="${i}" href="${encodeURI(b.pdf)}" target="_blank" rel="noopener" aria-label="${lab}" style="${st}"><span>${esc(b.title)}</span></a>`
       : `<button type="button" class="fb" data-d="${i}" aria-label="${lab}" style="${st}"><span>${esc(b.title)}</span></button>`; }).join("")
     + (m > DESK_MAX ? `<button type="button" class="more" id="more" aria-label="书桌上共有 ${m} 篇待读">+${m - DESK_MAX}</button>` : "");

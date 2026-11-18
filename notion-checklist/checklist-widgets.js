@@ -507,6 +507,7 @@ function taskRow(task) {
   const label = document.createElement('label');
   label.className = 'task-label';
   label.htmlFor = checkbox.id;
+  label.title = task.title;
   const title = document.createElement('span');
   title.className = 'task-title';
   title.textContent = task.title;
@@ -908,6 +909,9 @@ bindTaskForm(byId('compose'), () => {
   const id = globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
   filter = filter === 'done' ? 'all' : filter;
   updateTasks(selected, tasks => [...tasks, { id, title, done: false }]);
+  // Keep the newest task visible when the six-row list needs scrolling.
+  const taskList = byId('tasks');
+  taskList.scrollTop = taskList.scrollHeight;
   input.value = '';
   input.focus();
   announce('已添加任务：' + title);

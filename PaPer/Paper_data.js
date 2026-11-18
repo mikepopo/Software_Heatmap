@@ -11,6 +11,7 @@ const TOKEN = "paper-reading.github.session.v1";
 const STAGES = ["Abstract · Introduction · Related Work", "Method1", "Method2", "Experiment · Conclusion", "总结"];
 const channel = typeof BroadcastChannel === "function" ? new BroadcastChannel("paper-reading.v1") : null;
 let queue = Promise.resolve();
+let lastUploadedId = null;
 
 function day(at) {
   const date = new Date(at);
@@ -38,7 +39,22 @@ function validate(state) {
     if (paper.completedDate && !validDay(paper.completedDate)) throw new Error("论文完成日期无效。");
   }
   if (!state.legacyReadDates.every(validDay)) throw new Error("历史打卡日期无效。");
+  for (const [date, pause] of Object.entries(state.dayPauses || {})) {
+    if (!validDay(date) || !pause || typeof pause.reason !== "string" || !pause.reason.trim() || pause.reason.length > 500 || day(pause.at) !== date || (pause.resumedAt && day(pause.resumedAt) !== date)) throw new Error("暂停阅读记录格式无效。");
+  }
   return state;
+}
+function spineTitle(value) {
+  const title = String(value || "").replace(/\.pdf$/i, "").trim();
+  const parts = title.match(/^(.+)_([^_]+)_(\d{4})$/);
+  return parts ? parts[1] : title;
+}
+function pauseFor(state, date = day(new Date())) { const pause = state?.dayPauses?.[date]; return pause && !pause.resumedAt ? pause : null; }
+function dayDescription(state, date) {
+  const read = readDates(state).includes(date), pause = state.dayPauses?.[date];
+  const parts = [date, read ? "✓ 阅读已打卡" : "未打卡"];
+  if (pause) parts.push((pause.resumedAt ? "曾暂停：" : read ? "阅读后暂停：" : "未打卡原因：") + pause.reason);
+  return parts.join(" · ");
 }
 function isComplete(paper) { return Boolean(paper.completedDate) || paper.stages.every(Boolean); }
 function completedDate(paper) { return paper.completedDate || (isComplete(paper) ? day(paper.stages[4].at) : ""); }
@@ -64,16 +80,35 @@ function readDates(state) {
 function applyOperation(state, operation) {
   validate(state);
   const next = JSON.parse(JSON.stringify(state));
+  const date = day(operation.at);
   if (operation.type === "add") {
     if (next.papers.some(paper => paper.id === operation.paper.id)) return next;
     next.papers.push(operation.paper);
-  } else if (operation.type === "stage") {
+  } else if (["stage", "undo"].includes(operation.type)) {
     const paper = next.papers.find(item => item.id === operation.paperId);
     if (!paper) throw new Error("这篇论文已不在记录中，请刷新后重试。");
     if (!Number.isInteger(operation.index) || operation.index < 0 || operation.index > 4) throw new Error("阅读阶段无效。");
-    if (paper.stages[operation.index] || paper.completedDate) return next;
-    if (paper.stages.slice(0, operation.index).some(stage => !stage)) throw new Error("请先完成前面的阅读阶段。");
-    paper.stages[operation.index] = { at: operation.at };
+    if (operation.type === "undo") {
+      if (!paper.completedDate && !paper.stages[operation.index]) return next;
+      if (operation.expectedStages && operation.expectedStages !== JSON.stringify(paper.stages)) throw new Error("阶段已在其他页面变动，请刷新后再次撤回。");
+      next.undoHistory ||= [];
+      next.undoHistory.push({paperId:paper.id,index:operation.index,at:operation.at,stages:paper.stages.slice(operation.index),...(paper.completedDate ? {completedDate:paper.completedDate} : {})});
+      for (let i = operation.index; i < 5; i++) paper.stages[i] = null;
+      delete paper.completedDate;
+    } else {
+      if (pauseFor(next, date)) throw new Error("今天已暂停阅读，请先点击继续阅读。");
+      if (paper.stages[operation.index] || paper.completedDate) return next;
+      if (paper.stages.slice(0, operation.index).some(stage => !stage)) throw new Error("请先完成前面的阅读阶段。");
+      paper.stages[operation.index] = { at: operation.at };
+    }
+  } else if (operation.type === "pause") {
+    const reason = String(operation.reason || "").trim();
+    if (!reason || reason.length > 500) throw new Error("请填写停止阅读的原因（1–500字）。");
+    next.dayPauses ||= {};
+    next.dayPauses[date] = {reason, at:operation.at};
+  } else if (operation.type === "resume") {
+    if (!pauseFor(next, date)) return next;
+    next.dayPauses[date].resumedAt = operation.at;
   } else {
     throw new Error("不支持的论文记录操作。");
   }
@@ -121,16 +156,17 @@ async function freshState() {
   if (typeof file.content !== "string" || !file.sha) throw new Error("无法读取 GitHub 中的论文记录。");
   return { state: validate(JSON.parse(decode(file.content))), sha: file.sha };
 }
-async function load() {
+async function load(options = {}) {
   try {
+    if (token()) return remember((await freshState()).state, Boolean(options.notify));
     const response = await fetch(RAW + STATE_PATH + "?t=" + Date.now(), { cache: "no-store" });
     if (!response.ok) throw new Error("论文记录读取失败（HTTP " + response.status + "）。");
     const remote = validate(await response.json());
     const local = cached();
-    return remember(local && local.revision > remote.revision ? local : remote, false);
+    return remember(local && local.revision > remote.revision ? local : remote, Boolean(options.notify));
   } catch (error) {
     // The caller decides whether and how to surface a failed refresh.
-    throw new Error("无法读取 GitHub 论文记录，请点击刷新重试。");
+    throw new Error(error.message || "无法读取 GitHub 论文记录，请点击刷新重试。");
   }
 }
 function commitOperation(operation) {
@@ -141,12 +177,16 @@ function commitOperation(operation) {
       if (next.revision === state.revision) return remember(state, true);
       try {
         await api(STATE_PATH, { method: "PUT", body: JSON.stringify({
-          message: operation.type === "add" ? "Add a paper to the reading desk" : "Record paper reading stage " + (operation.index + 1),
+          message: operation.type === "add" ? "Add a paper to the reading desk" : operation.type === "stage" ? "Record paper reading stage " + (operation.index + 1) : operation.type === "undo" ? "Undo paper reading stage " + (operation.index + 1) : operation.type === "pause" ? "Record reading pause reason" : "Resume paper reading",
           branch: BRANCH, sha, content: encode(JSON.stringify(next, null, 2) + "\n")
         }) });
         const verified = (await freshState()).state;
-        const paper = verified.papers.find(item => item.id === (operation.paperId || operation.paper.id));
-        if (!paper || (operation.type === "stage" && !paper.stages[operation.index])) throw new Error("写入后的回读未通过，请重试。");
+        const paper = verified.papers.find(item => item.id === (operation.paperId || operation.paper?.id));
+        const confirmed = operation.type === "pause" ? pauseFor(verified, day(operation.at))?.reason === operation.reason.trim()
+          : operation.type === "resume" ? !pauseFor(verified, day(operation.at))
+          : operation.type === "undo" ? paper && !isComplete(paper) && !paper.stages[operation.index]
+          : operation.type === "stage" ? Boolean(paper?.stages[operation.index]) : Boolean(paper);
+        if (!confirmed) throw new Error("写入后的回读未通过，请重试。");
         return remember(verified, true);
       } catch (error) {
         if (![409, 422].includes(error.status) || attempt === 2) throw error;
@@ -178,6 +218,7 @@ async function upload(file, title) {
   const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
   const hash = [...digest].map(value => value.toString(16).padStart(2, "0")).join("");
   const id = "paper-" + hash;
+  lastUploadedId = id;
   const existing = (await freshState()).state.papers.find(paper => paper.id === id);
   if (existing) return remember((await freshState()).state, true);
   const path = "PaPer/papers/" + hash + ".pdf";
@@ -189,7 +230,7 @@ async function upload(file, title) {
     if (uploaded.size !== bytes.length) throw new Error("PDF 上传冲突，请重试。");
   }
   const at = new Date().toISOString();
-  return commitOperation({ type: "add", at, paper: { id, title: (title || file.name.replace(/\.pdf$/i, "")).trim(), pdf: "papers/" + hash + ".pdf", addedAt: at, stages: [null, null, null, null, null] } });
+  return commitOperation({ type: "add", at, paper: { id, title: file.name.replace(/\.pdf$/i, "").trim(), originalFileName: file.name, pdf: "papers/" + hash + ".pdf", addedAt: at, stages: [null, null, null, null, null] } });
 }
 function watch(listener) {
   let revision = cached()?.revision ?? -1;
@@ -205,6 +246,6 @@ function watch(listener) {
     try { const state = await load(); if (state.revision !== revision) { revision = state.revision; listener(state); } } catch (error) {}
   }, 60000);
 }
-root.PaperData = { STAGES, day, validate, isComplete, completedDate, completed, pending, readDates, applyOperation, load, watch, token, connect, disconnect, upload, commitOperation };
+root.PaperData = { STAGES, day, spineTitle, pauseFor, dayDescription, get lastUploadedId() { return lastUploadedId; }, validate, isComplete, completedDate, completed, pending, readDates, applyOperation, load, watch, token, connect, disconnect, upload, commitOperation };
 if (typeof module === "object" && module.exports) module.exports = root.PaperData;
 })(typeof window === "object" ? window : globalThis);

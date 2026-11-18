@@ -41,7 +41,8 @@
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media(max-width:540px){.card{padding:20px 8px 12px}.topbar{gap:7px}.picker{height:29px;padding-inline:6px}.picker select{max-width:76px}.seg{height:29px}.seg button{height:23px;padding:0 7px}.seg .thumb{height:23px}.stats-row{gap:4px}.legend{gap:5px}}
 #ttl.swap{animation:ttl .35s ease both}@keyframes ttl{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-</style><script src="Paper_data.js"></script>
+.day-cell.has-pause:not(.f-s){box-shadow:inset 0 0 0 1.5px #c59a50}.day-cell.has-pause{cursor:help}
+</style><script src="Paper_data.js?v=reading-v3"></script>
 </head>
 <body><main class="card">
 <div class="topbar"><h1 id="ttl">论文阅读记录</h1><div class="tools"><div class="seg" id="seg" style="display:none" role="tablist" aria-label="显示内容"><span class="thumb" id="thumb"></span><button data-v="all" role="tab">全部</button><button data-v="study" role="tab">阅读</button><button data-v="practice" role="tab">实验</button></div><label class="picker" aria-label="按年份筛选"><select id="year-picker" aria-label="选择年份"></select><span class="calendar-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.5A2.5 2.5 0 0 1 22 6.5v12A2.5 2.5 0 0 1 19.5 21h-15A2.5 2.5 0 0 1 2 18.5v-12A2.5 2.5 0 0 1 4.5 4H6V3a1 1 0 0 1 1-1Zm12.5 8h-15v8.5a.5.5 0 0 0 .5.5h14a.5.5 0 0 0 .5-.5V10ZM5 6a.5.5 0 0 0-.5.5V8h15V6.5A.5.5 0 0 0 19 6H5Z"/></svg></span></label></div></div>
@@ -50,14 +51,15 @@
 </main>
 <script>
 /* 夜间维护生成日期快照；实时打卡来自 reading-state.json。 */
-const READ_DATES = [];
+const READ_DATES = ["2026-11-18"];
 const EXPERIMENT_DATES = []; /* 未使用 */
 (async()=>{
- const READ_DATES = PaperData.readDates(await PaperData.load());
+ const readingState = await PaperData.load();
+ const READ_DATES = PaperData.readDates(readingState);
  const CELL=12,GAP=4,LABEL_WIDTH=46,TOP_ROW_HEIGHT=20,FIRST_YEAR=2020,LAST_YEAR=2035;
  const done=new Set(READ_DATES),partial=new Set(),prac=new Set(EXPERIMENT_DATES),$=id=>document.getElementById(id);
  const pad=n=>String(n).padStart(2,'0'),toISO=d=>d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate());
- const dayIndex=d=>(d.getUTCDay()+6)%7,utcDate=(y,m,d)=>new Date(Date.UTC(y,m,d)),now=new Date(),currentYear=now.getFullYear();
+ const dayIndex=d=>(d.getUTCDay()+6)%7,utcDate=(y,m,d)=>new Date(Date.UTC(y,m,d)),now=new Date(PaperData.day(new Date())+"T00:00:00Z"),currentYear=now.getUTCFullYear();
  const ICON={
   study:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M16 13H8"></path><path d="M16 17H8"></path>',
   practice:'<path d="M9 3h6"></path><path d="M10 3v6.5L4.5 19a1.5 1.5 0 0 0 1.3 2.2h12.4a1.5 1.5 0 0 0 1.3-2.2L14 9.5V3"></path><path d="M7.5 15h9"></path>',
@@ -83,15 +85,15 @@ const EXPERIMENT_DATES = []; /* 未使用 */
   $('heatmap-wrap').style.setProperty('--grid-width',gridWidth+'px');$('heatmap-wrap').style.setProperty('--base-height',gridHeight+'px');map.setAttribute('aria-label',y+' 年科研打卡热力图');
   for(let month=0;month<12;month++){const date=utcDate(y,month,1),week=Math.floor((date-first)/604800000),label=document.createElement('div');label.className='month-label';label.textContent=(month+1)+'月';label.style.gridColumn=String(week+2);label.style.gridRow='1';map.appendChild(label)}
   [['周一',2],['周三',4],['周五',6]].forEach(([text,row])=>{const label=document.createElement('div');label.className='weekday';label.textContent=text;label.style.gridColumn='1';label.style.gridRow=String(row);map.appendChild(label)});
-  const today=toISO(utcDate(now.getFullYear(),now.getMonth(),now.getDate()));
+  const today=PaperData.day(new Date());
   for(let i=0;i<weeks*7;i++){const date=new Date(first);date.setUTCDate(first.getUTCDate()+i);const key=toISO(date),week=Math.floor(i/7),row=dayIndex(date)+2,inYear=date.getUTCFullYear()===y,cell=document.createElement('div');
-   cell.className='day-cell';cell.style.gridColumn=String(week+2);cell.style.gridRow=String(row);cell.style.setProperty('--d',(week*9)+'ms');
+   cell.className='day-cell';cell.dataset.date=key;cell.style.gridColumn=String(week+2);cell.style.gridRow=String(row);cell.style.setProperty('--d',(week*9)+'ms');
    if(!inYear){cell.title=key;cell.setAttribute('aria-label',key+'（年度外）')}else{
     const a=done.has(key),h=!a&&partial.has(key),p=prac.has(key);
     if(a)cell.classList.add('f-s');if(h)cell.classList.add('f-h');if(p)cell.classList.add('f-p');
     if((a||h||p)&&replay){cell.classList.add('pop');cell.style.setProperty('--r',(i/(weeks*7)*0.9).toFixed(3)+'s')}
     const tip=[a?'✓ 阅读':h?'◐ 阅读部分完成':'',p?'✓ 实验':''].filter(Boolean);
-    cell.title=key+(tip.length?' · '+tip.join(' · ')+(a&&p?' · 双修':''):' · 未打卡');cell.setAttribute('aria-label',cell.title)}
+    cell.title=PaperData.dayDescription(readingState,key);if(p)cell.title+=' · ✓ 实验';if(readingState.dayPauses?.[key])cell.classList.add('has-pause');cell.setAttribute('aria-label',cell.title)}
    if(key===today)cell.classList.add('is-today');map.appendChild(cell)}
   applyView(false);
  }

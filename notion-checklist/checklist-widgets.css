@@ -518,10 +518,37 @@ h2, .habit-card h2 { font-size: 19px; }
 .day { min-height: 34px; }
 
 #planner { display: flex; flex-direction: column; }
-[data-embedded] #planner { max-block-size: max(272px, calc(100dvh - 4px)); }
+/* Keep the embedded task list at six fixed-height rows, independent of task count
+   or the surrounding Notion iframe height. Extra tasks scroll within the list. */
 #planner > :not(.tasks) { flex: 0 0 auto; }
-#planner .tasks { min-block-size: 0; overflow-y: auto; scrollbar-width: thin; }
-#planner .task { min-height: 39px; }
+#planner .tasks {
+  flex: 0 0 264px;
+  block-size: 264px;
+  min-block-size: 264px;
+  max-block-size: 264px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  overscroll-behavior-y: contain;
+}
+#planner .task {
+  block-size: 44px;
+  min-block-size: 44px;
+  max-block-size: 44px;
+  grid-template-rows: minmax(0, 1fr);
+}
+#planner .task-label { overflow: hidden; }
+#planner .task-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#planner .empty {
+  flex: 0 0 264px;
+  block-size: 264px;
+  min-block-size: 264px;
+  max-block-size: 264px;
+}
 #planner .compose { margin: 8px 0 6px; }
 #planner .compose input { min-height: 36px; }
 #planner .toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px; padding-bottom: 5px; }

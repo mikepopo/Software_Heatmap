@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 0,
-  "updatedAt": "2026-11-18T08:00:00.000Z",
+  "revision": 1,
+  "updatedAt": "2026-11-18T09:18:42.344Z",
   "legacyReadDates": [],
   "papers": [
     {
@@ -10,7 +10,9 @@
       "pdf": "papers/unsupervised_rr.pdf",
       "addedAt": "2026-11-01T04:00:00.000Z",
       "stages": [
-        null,
+        {
+          "at": "2026-11-18T09:18:42.344Z"
+        },
         null,
         null,
         null,

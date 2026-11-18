@@ -1,33 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 13,
-  "updatedAt": "2026-11-18T10:33:29.816Z",
+  "revision": 14,
+  "updatedAt": "2026-11-18T10:33:46.401Z",
   "legacyReadDates": [],
-  "papers": [
-    {
-      "id": "paper-fe3ac8cbe50c7db69843ccafe39d1e51cf915c2d1ac7eb6b3ca932a83982bdf0",
-      "title": "main",
-      "pdf": "papers/fe3ac8cbe50c7db69843ccafe39d1e51cf915c2d1ac7eb6b3ca932a83982bdf0.pdf",
-      "addedAt": "2026-11-18T09:40:37.954Z",
-      "stages": [
-        {
-          "at": "2026-11-18T09:41:20.431Z"
-        },
-        {
-          "at": "2026-11-18T09:41:24.360Z"
-        },
-        {
-          "at": "2026-11-18T09:41:28.863Z"
-        },
-        {
-          "at": "2026-11-18T09:41:33.912Z"
-        },
-        {
-          "at": "2026-11-18T09:41:38.416Z"
-        }
-      ]
-    }
-  ],
+  "papers": [],
   "undoHistory": [
     {
       "paperId": "legacy-unsupervised-rr",
@@ -72,6 +48,37 @@
       "pdfBackup": {
         "path": "PaPer/papers/unsupervised_rr.pdf",
         "sha": "ce52cf9d48b23f4525dfe0b4137551991b331193"
+      }
+    },
+    {
+      "paper": {
+        "id": "paper-fe3ac8cbe50c7db69843ccafe39d1e51cf915c2d1ac7eb6b3ca932a83982bdf0",
+        "title": "main",
+        "pdf": "papers/fe3ac8cbe50c7db69843ccafe39d1e51cf915c2d1ac7eb6b3ca932a83982bdf0.pdf",
+        "addedAt": "2026-11-18T09:40:37.954Z",
+        "stages": [
+          {
+            "at": "2026-11-18T09:41:20.431Z"
+          },
+          {
+            "at": "2026-11-18T09:41:24.360Z"
+          },
+          {
+            "at": "2026-11-18T09:41:28.863Z"
+          },
+          {
+            "at": "2026-11-18T09:41:33.912Z"
+          },
+          {
+            "at": "2026-11-18T09:41:38.416Z"
+          }
+        ]
+      },
+      "position": 0,
+      "deletedAt": "2026-11-18T10:33:46.401Z",
+      "pdfBackup": {
+        "path": "PaPer/papers/fe3ac8cbe50c7db69843ccafe39d1e51cf915c2d1ac7eb6b3ca932a83982bdf0.pdf",
+        "sha": "ce651f2044dde4b6bcdf2529ca9d6946f17f3397"
       }
     }
   ]

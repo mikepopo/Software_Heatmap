@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>论文森林</title>
+<style>
+:root{color-scheme:light dark;--ink:#2f3d52;--strong:#273245;--muted:#5d6b7f;--line:#dce4ef;--surface:#fff;--accent:#0f766e;--tint:#edf6f2;--tab:#f2f5f4;--wood:#f4eee2}
+@media(prefers-color-scheme:dark){:root{--ink:#d8dee9;--strong:#f2f5f8;--muted:#a3afc0;--line:#354255;--surface:#181d25;--accent:#5cc3b6;--tint:#213e38;--tab:#26322f;--wood:#28362e}}
+*{box-sizing:border-box}
+html,body{margin:0;background:transparent;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+button,select,a{font:inherit}
+button{cursor:pointer}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+[hidden]{display:none!important}
+.card{padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 2px #1f2d3d0a;overflow:hidden}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap}
+.heading{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h1{margin:0;color:var(--strong);font-size:18px;font-weight:800;letter-spacing:.2px}
+.count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.count strong{color:var(--accent);font-size:15px;font-weight:750}
+.tools{display:flex;align-items:center;gap:7px}
+.segment{display:flex;gap:3px;padding:3px;background:var(--tab);border-radius:8px}
+.segment button,.refresh{padding:5px 10px;border:0;border-radius:6px;background:transparent;font-size:12px;color:var(--muted);line-height:1.3}
+.segment button[aria-pressed="true"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px #1f2d3d12;font-weight:650}
+.refresh{border:1px solid var(--line);background:var(--surface)}
+.refresh:disabled{cursor:wait;opacity:.65}
+.subbar{display:flex;align-items:center;justify-content:space-between;gap:9px;margin:10px 0 8px;flex-wrap:wrap}
+.tabs{display:flex;gap:12px}
+.tabs button{padding:3px 0;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);font-size:12px}
+.tabs button[aria-pressed="true"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:650}
+.scope{font-size:12px;color:var(--muted)}
+.land{overflow:hidden;border-radius:10px;background:#223d34}
+.stage{position:relative;isolation:isolate;aspect-ratio:16/9;max-height:400px;overflow:hidden}
+.landscape{display:block;width:100%;height:100%;position:absolute;inset:0;object-fit:fill;filter:saturate(.83) brightness(.91)}
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1500;background:linear-gradient(180deg,#193c342a,transparent 38%,#203a3110)}
+.trees{list-style:none;margin:0;padding:0;position:absolute;inset:0}
+.plot{position:absolute;inset:0;pointer-events:none}
+.tree{position:absolute;left:var(--x);top:var(--y);width:var(--width);aspect-ratio:72/76;z-index:var(--depth);transform:translate(-50%,-87%);border:0;padding:0;background:transparent;pointer-events:auto;border-radius:38%}
+.tree::before{content:"";position:absolute;left:22%;right:22%;height:9%;bottom:6%;border-radius:50%;background:#182d2559;filter:blur(2px)}
+.tree img{position:relative;display:block;width:100%;height:100%;object-fit:contain;transform-origin:50% 88%;animation:breeze 7s var(--delay) ease-in-out infinite}
+.tree:hover img,.tree[aria-pressed="true"] img{filter:drop-shadow(0 0 4px #fff2c4)}
+.tree.growing img{animation:grow .75s cubic-bezier(.2,.75,.35,1) both}
+@keyframes breeze{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(1deg)}}
+@keyframes grow{from{opacity:0;transform:scale(.12) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.empty{position:absolute;left:50%;top:65%;transform:translate(-50%,-50%);z-index:1600;margin:0;padding:9px 14px;border:1px solid #d9e8ce52;border-radius:10px;background:#1c392ce6;color:#f5f1de;text-align:center;font-size:12px;line-height:1.7;max-width:85%;width:max-content;box-shadow:0 3px 16px #152b2b30}
+.empty span{display:block;font-size:19px;margin-bottom:2px}
+.basebar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:8px 10px;background:var(--wood);font-size:12px}
+.detail{margin:0;flex:1;min-width:130px;line-height:1.6;overflow-wrap:anywhere;color:var(--ink)}
+.detail a{color:var(--accent);text-underline-offset:3px}
+.pages{display:flex;align-items:center;gap:5px;margin-left:auto}
+.pages button,.pages select{min-height:27px;padding:3px 7px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--surface);font-size:12px}
+.pages button:disabled{cursor:default;opacity:.4}
+.guide{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.species{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 5px 8px;border:1px solid var(--line);border-radius:9px;background:var(--tint);text-align:center}
+.species img{width:64px;height:65px;object-fit:contain}
+.species strong{font-size:12px;color:var(--strong);margin:3px 0 4px}
+.species small{font-size:11px;color:var(--muted)}
+.species.locked{background:var(--tab)}
+.species.locked img{filter:grayscale(1);opacity:.35}
+.milestone{margin:10px 0 0;font-size:12px;color:var(--muted)}
+.progress{display:block;width:100%;height:5px;margin-top:7px;accent-color:var(--accent)}
+.status{margin:9px 0 0;font-size:12px;line-height:1.6;color:#a54d30}
+noscript p{margin:8px 0;font-size:12px}
+@media(max-width:560px){.card{padding:10px}.heading{gap:7px}.tools{margin-left:auto}.segment button,.refresh{padding:5px 8px}.guide{grid-template-columns:repeat(3,minmax(0,1fr))}.stage{min-height:185px}.empty{padding:6px 9px;font-size:11px}.count{font-size:11px}.count strong{font-size:13px}}
+@media(max-width:350px){.heading{width:100%;justify-content:space-between}.tools{width:100%;justify-content:space-between}.guide{grid-template-columns:repeat(2,minmax(0,1fr))}.species img{width:54px;height:54px}}
+@media(prefers-reduced-motion:reduce){.tree img,.tree.growing img{animation:none}}
+</style>
+</head>
+<body>
+<main class="card" aria-labelledby="title">
+  <div class="top">
+    <div class="heading"><h1 id="title">🌲 论文森林</h1><span class="count">累计 <strong id="total">—</strong> 棵 · 本月 <strong id="month-total">—</strong> 棵</span></div>
+    <div class="tools">
+      <div class="segment" role="group" aria-label="森林显示范围">
+        <button type="button" data-range="all" aria-pressed="true">全部</button>
+        <button type="button" data-range="month" aria-pressed="false">本月</button>
+        <button type="button" data-range="year" aria-pressed="false">今年</button>
+      </div>
+      <button class="refresh" id="refresh" type="button">刷新</button>
+    </div>
+  </div>
+  <div class="subbar">
+    <div class="tabs" role="group" aria-label="森林内容">
+      <button type="button" data-view="forest" aria-pressed="true">森林</button>
+      <button type="button" data-view="guide" aria-pressed="false">树种图鉴</button>
+    </div>
+    <span class="scope" id="scope" aria-live="polite">正在读取论文书架…</span>
+  </div>
+  <section class="land" id="forest-view" aria-label="论文森林">
+    <div class="stage">
+      <img class="landscape" id="landscape" alt="暮色溪畔的林地，远处是石屋和层叠山丘" width="1504" height="846">
+      <ul class="trees" id="trees" aria-label="已读论文种下的树"></ul>
+      <p class="empty" id="empty" hidden><span aria-hidden="true">🌱</span><span id="empty-text">读完第一篇论文，让森林开始生长</span></p>
+    </div>
+    <div class="basebar">
+      <p class="detail" id="detail">每读完一篇论文，种下一棵树。</p>
+      <div class="pages" id="pages" hidden>
+        <button type="button" id="previous" aria-label="上一片森林">‹</button>
+        <select id="page-select" aria-label="选择森林"></select>
+        <button type="button" id="next" aria-label="下一片森林">›</button>
+      </div>
+    </div>
+  </section>
+  <section id="guide-view" aria-label="树种图鉴" hidden>
+    <div class="guide" id="guide"></div>
+    <p class="milestone" id="milestone"></p>
+    <progress class="progress" id="progress" aria-label="下一个树种的解锁进度" hidden></progress>
+  </section>
+  <p class="status" id="status" role="alert" hidden></p>
+  <noscript><p>请在支持 JavaScript 的浏览器中打开。</p></noscript>
+</main>
+<script src="Paper_forest_art.js"></script>
+<script>
+"use strict";
+
+const byId = id => document.getElementById(id);
+const SHELF_URL = new URL("../Paper_shelf.html", location.href);
+const PAGE_SIZE = 49;
+const SPECIES = [
+  { id: "pine", name: "青松", goal: 0 },
+  { id: "cherry", name: "樱花", goal: 5 },
+  { id: "hydrangea", name: "绣球木", goal: 8 },
+  { id: "maple", name: "金枫", goal: 12 },
+  { id: "birch", name: "白桦", goal: 18 },
+  { id: "willow", name: "垂柳", goal: 25 },
+  { id: "flame", name: "火焰木", goal: 32 },
+  { id: "ginkgo", name: "银杏", goal: 40 },
+  { id: "star", name: "星光树", goal: 50 },
+  { id: "snowfir", name: "雪杉", goal: 65 },
+  { id: "jacaranda", name: "蓝花楹", goal: 85 },
+  { id: "banyan", name: "碧玉榕", goal: 110 }
+];
+const slots = [[2, 2], [1, 2], [3, 1], [2, 3], [1, 0], [3, 3], [0, 3], [4, 2]];
+for (let side = 5; side <= 7; side++) {
+  for (let row = 0; row < side; row++) {
+    for (let column = 0; column < side; column++) {
+      if (!slots.some(([x, y]) => x === column && y === row)) slots.push([column, row]);
+    }
+  }
+}
+
+let papers = [];
+let range = "all";
+let page = 0;
+let inspected = null;
+let loaded = false;
+let lastSource = null;
+let loadVersion = 0;
+let knownKeys = new Set();
+let growingKeys = new Set();
+
+function today() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return values.year + "-" + values.month + "-" + values.day;
+}
+
+function hash(value) {
+  let result = 7;
+  for (const letter of value) result = (result * 31 + letter.charCodeAt(0)) >>> 0;
+  return result;
+}
+
+function validDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(value + "T00:00:00Z");
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+// Keep the same PAPERS representation as the existing paper shelf.
+function readPapers(source) {
+  const match = source.match(/const\s+PAPERS\s*=\s*\[([\s\S]*?)\]\s*;/);
+  if (!match) throw new Error("论文书架中未找到已读列表 PAPERS。");
+  let entries;
+  try {
+    entries = Function("return [" + match[1] + "]")();
+  } catch (error) {
+    throw new Error("论文书架的已读列表格式有误。");
+  }
+  if (!Array.isArray(entries)) throw new Error("论文书架的已读列表格式有误。");
+  return entries.filter(item => item && item.title).map((item, index) => {
+    const title = String(item.title);
+    const date = validDate(item.date) ? item.date : "";
+    const unlocked = SPECIES.filter(species => species.goal <= index + 1);
+    const milestone = unlocked.find(species => species.goal === index + 1);
+    const species = milestone || unlocked[hash(title + date + index) % unlocked.length];
+    let pdf = "";
+    if (typeof item.pdf === "string" && item.pdf.trim()) {
+      try {
+        const url = new URL(item.pdf, SHELF_URL);
+        if (["https:", "http:"].includes(url.protocol)) pdf = url.href;
+      } catch (error) {
+        // A paper with no usable PDF still contributes its tree.
+      }
+    }
+    return { title, date, pdf, index, species, key: title + "|" + date + "|" + index };
+  });
+}
+
+function visiblePapers() {
+  const date = today();
+  const prefix = range === "month" ? date.slice(0, 7) : date.slice(0, 4);
+  return papers.filter(paper => range === "all" || paper.date.startsWith(prefix))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.index - b.index);
+}
+
+// Preserve the perspective and expansion of the reference task forest.
+function plotPosition(side, column, row) {
+  const depth = row / (side - 1);
+  const across = column / (side - 1) - .5;
+  const expansion = side - 5;
+  const spread = .55 + depth * .15 + expansion * .043;
+  const stagger = row % 2 ? .028 : -.01;
+  const farEdge = .555 - expansion * .035;
+  const x = .50 + .014 * (1 - depth) + across * spread + stagger
+    + (((column * 13 + row * 7) % 9) - 4) * .0028;
+  const y = farEdge + depth * (.89 - farEdge)
+    - across * .036 + (((column * 11 + row * 17) % 7) - 3) * .0019;
+  const width = 7.9 + 4.2 * depth - .99 * expansion + ((column * 7 + row * 3) % 5) * .14;
+  return { x, y, width };
+}
+
+function updateDetail() {
+  const detail = byId("detail");
+  const paper = visiblePapers().find(item => item.key === inspected);
+  detail.replaceChildren();
+  if (!paper) {
+    inspected = null;
+    detail.textContent = "每读完一篇论文，种下一棵树。";
+    return;
+  }
+  detail.append(document.createTextNode((paper.date || "完成日期未填写") + " · " + paper.species.name + " · "));
+  if (paper.pdf) {
+    const link = document.createElement("a");
+    link.href = paper.pdf;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.textContent = paper.title;
+    detail.append(link);
+  } else {
+    detail.append(document.createTextNode(paper.title));
+  }
+}
+
+function renderGuide() {
+  const tiles = SPECIES.map(species => {
+    const unlocked = papers.length >= species.goal;
+    const tile = document.createElement("div");
+    tile.className = "species" + (unlocked ? "" : " locked");
+    const image = document.createElement("img");
+    image.src = TREE_SPRITES[species.id];
+    image.alt = "";
+    const title = document.createElement("strong");
+    title.textContent = species.name;
+    const status = document.createElement("small");
+    status.textContent = unlocked
+      ? "已种 " + papers.filter(paper => paper.species.id === species.id).length + " 棵"
+      : species.goal + " 篇解锁";
+    tile.append(image, title, status);
+    return tile;
+  });
+  byId("guide").replaceChildren(...tiles);
+  const next = SPECIES.find(species => species.goal > papers.length);
+  byId("milestone").textContent = next
+    ? "再读 " + (next.goal - papers.length) + " 篇，解锁" + next.name
+    : "已解锁全部树种";
+  const progress = byId("progress");
+  progress.hidden = !next;
+  if (next) {
+    progress.max = next.goal;
+    progress.value = papers.length;
+  }
+}
+
+function render() {
+  const visible = visiblePapers();
+  const pageCount = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  page = Math.min(page, pageCount - 1);
+  const group = visible.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const side = Math.min(7, Math.max(5, Math.ceil(Math.sqrt(group.length))));
+  byId("total").textContent = String(papers.length);
+  byId("month-total").textContent = String(papers.filter(paper => paper.date.startsWith(today().slice(0, 7))).length);
+  const labels = { all: "全部论文", month: today().slice(0, 7).replace("-", " 年 ") + " 月", year: today().slice(0, 4) + " 年" };
+  byId("scope").textContent = labels[range] + " · " + visible.length + " 棵";
+  const focusedKey = document.activeElement?.dataset?.paperKey;
+  const trees = group.map((paper, index) => {
+    const item = document.createElement("li");
+    item.className = "plot";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "tree" + (growingKeys.has(paper.key) ? " growing" : "");
+    button.dataset.paperKey = paper.key;
+    const [column, row] = slots[index];
+    const position = plotPosition(side, column, row);
+    button.style.setProperty("--x", position.x * 100 + "%");
+    button.style.setProperty("--y", position.y * 100 + "%");
+    button.style.setProperty("--width", position.width + "%");
+    button.style.setProperty("--depth", String(Math.round(position.y * 1000)));
+    button.style.setProperty("--delay", -index * .42 + "s");
+    button.title = (paper.date || "未填写日期") + " · " + paper.species.name + " · " + paper.title;
+    button.setAttribute("aria-label", button.title);
+    button.setAttribute("aria-pressed", String(inspected === paper.key));
+    const image = document.createElement("img");
+    image.src = TREE_SPRITES[paper.species.id];
+    image.alt = "";
+    image.draggable = false;
+    button.append(image);
+    button.addEventListener("click", () => {
+      inspected = inspected === paper.key ? null : paper.key;
+      byId("trees").querySelectorAll("button").forEach(tree => {
+        tree.setAttribute("aria-pressed", String(tree.dataset.paperKey === inspected));
+      });
+      updateDetail();
+    });
+    item.append(button);
+    return item;
+  });
+  byId("trees").replaceChildren(...trees);
+  if (focusedKey) {
+    const button = [...byId("trees").querySelectorAll("button")].find(tree => tree.dataset.paperKey === focusedKey);
+    button?.focus({ preventScroll: true });
+  }
+  byId("empty").hidden = group.length > 0;
+  byId("empty-text").textContent = papers.length
+    ? "这个时间范围还没有读完的论文"
+    : "读完第一篇论文，让森林开始生长";
+  byId("pages").hidden = pageCount <= 1;
+  byId("previous").disabled = page === 0;
+  byId("next").disabled = page === pageCount - 1;
+  const options = Array.from({ length: pageCount }, (_, index) => {
+    const option = document.createElement("option");
+    option.value = String(index);
+    option.textContent = "第 " + (index + 1) + " / " + pageCount + " 片";
+    return option;
+  });
+  byId("page-select").replaceChildren(...options);
+  byId("page-select").value = String(page);
+  updateDetail();
+  renderGuide();
+}
+
+async function loadPapers() {
+  const version = ++loadVersion;
+  const refresh = byId("refresh");
+  refresh.disabled = true;
+  refresh.textContent = "读取中…";
+  try {
+    const url = new URL(SHELF_URL);
+    url.searchParams.set("t", String(Date.now()));
+    const response = await fetch(url.href, { cache: "no-store" });
+    if (!response.ok) throw new Error("书架读取失败（HTTP " + response.status + "）。");
+    const source = await response.text();
+    if (version !== loadVersion) return;
+    if (source !== lastSource) {
+      const next = readPapers(source);
+      growingKeys = new Set(loaded ? next.filter(paper => !knownKeys.has(paper.key)).map(paper => paper.key) : []);
+      papers = next;
+      knownKeys = new Set(next.map(paper => paper.key));
+      lastSource = source;
+      loaded = true;
+    } else {
+      growingKeys = new Set();
+    }
+    byId("status").hidden = true;
+    render();
+  } catch (error) {
+    if (version !== loadVersion) return;
+    byId("status").hidden = false;
+    byId("status").textContent = error.message + (loaded ? " 已保留上次结果，点击刷新重试。" : " 点击刷新重试。");
+    if (!loaded) byId("scope").textContent = "暂时无法读取论文书架";
+  } finally {
+    if (version === loadVersion) {
+      refresh.disabled = false;
+      refresh.textContent = "刷新";
+    }
+  }
+}
+
+byId("landscape").src = ORCHARD_IMAGE;
+document.querySelectorAll("[data-range]").forEach(button => {
+  button.addEventListener("click", () => {
+    range = button.dataset.range;
+    page = 0;
+    inspected = null;
+    document.querySelectorAll("[data-range]").forEach(item => {
+      item.setAttribute("aria-pressed", String(item === button));
+    });
+    if (loaded) render();
+  });
+});
+document.querySelectorAll("[data-view]").forEach(button => {
+  button.addEventListener("click", () => {
+    const forest = button.dataset.view === "forest";
+    byId("forest-view").hidden = !forest;
+    byId("guide-view").hidden = forest;
+    document.querySelectorAll("[data-view]").forEach(item => {
+      item.setAttribute("aria-pressed", String(item === button));
+    });
+  });
+});
+byId("previous").addEventListener("click", () => {
+  if (page > 0) { page--; inspected = null; render(); }
+});
+byId("next").addEventListener("click", () => {
+  if ((page + 1) * PAGE_SIZE < visiblePapers().length) { page++; inspected = null; render(); }
+});
+byId("page-select").addEventListener("change", event => {
+  page = Number(event.target.value);
+  inspected = null;
+  render();
+});
+byId("refresh").addEventListener("click", loadPapers);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) loadPapers();
+});
+window.addEventListener("focus", loadPapers);
+setInterval(() => { if (!document.hidden) loadPapers(); }, 60000);
+loadPapers();
+</script>
+</body>
+</html>

@@ -7,6 +7,7 @@ const SELECTED_DAY_STORE = 'daily-checklist.embeds.selected-day.v1';
 const panel = document.body.dataset.panel;
 if (window.self !== window.top) document.body.dataset.embedded = '';
 const OLDER_STORES = ['daily-checklist.records.v3', 'daily-checklist.records.v2', 'daily-checklist.records.v1'];
+const TASK_CATEGORIES = ['学习', '生活', '锻炼'];
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
 const shanghaiDate = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit',
@@ -89,7 +90,8 @@ function validateRecords(value) {
       }
       seen.add(task.id);
       if (task.tree !== undefined && !Object.hasOwn(TREE_SPECIES, task.tree)) throw new Error('Invalid tree species');
-      return { id: task.id, title: task.title.trim(), done: task.done, ...(task.tree ? { tree: task.tree } : {}) };
+      if (task.category !== undefined && !TASK_CATEGORIES.includes(task.category)) throw new Error('Invalid task category');
+      return { id: task.id, title: task.title.trim(), done: task.done, ...(task.category ? { category: task.category } : {}), ...(task.tree ? { tree: task.tree } : {}) };
     });
   }
   const recaps = Object.create(null);
@@ -512,6 +514,13 @@ function taskRow(task) {
   title.className = 'task-title';
   title.textContent = task.title;
   label.append(title);
+  if (task.category) {
+    const category = document.createElement('span');
+    category.className = 'task-category';
+    category.dataset.category = task.category;
+    category.textContent = task.category;
+    label.append(category);
+  }
 
   const actions = document.createElement('div');
   actions.className = 'task-actions';
@@ -906,9 +915,11 @@ bindTaskForm(byId('compose'), () => {
   const input = byId('task-name');
   const title = taskTitle(input);
   if (!title) return;
+  const category = byId('task-category').value;
+  if (!TASK_CATEGORIES.includes(category)) return;
   const id = globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
   filter = filter === 'done' ? 'all' : filter;
-  updateTasks(selected, tasks => [...tasks, { id, title, done: false }]);
+  updateTasks(selected, tasks => [...tasks, { id, title, category, done: false }]);
   // Keep the newest task visible when the six-row list needs scrolling.
   const taskList = byId('tasks');
   taskList.scrollTop = taskList.scrollHeight;
@@ -995,6 +1006,7 @@ byId('tasks')?.addEventListener('click', event => {
   if (button.dataset.action === 'edit') {
     editing = { day, id };
     byId('edit-name').value = task.title;
+    byId('edit-category').value = task.category ?? '';
     byId('edit-name').setCustomValidity('');
     editDialog.showModal();
     byId('edit-name').select();
@@ -1015,8 +1027,16 @@ editDialog?.addEventListener('close', () => {
 bindTaskForm(byId('edit-form'), () => {
   const title = taskTitle(byId('edit-name'));
   if (!title || !editing) return;
+  const category = byId('edit-category').value;
+  if (category && !TASK_CATEGORIES.includes(category)) return;
   const { day, id } = editing;
-  updateTasks(day, tasks => tasks.map(task => task.id === id ? { ...task, title } : task));
+  updateTasks(day, tasks => tasks.map(task => {
+    if (task.id !== id) return task;
+    const updated = { ...task, title };
+    if (category) updated.category = category;
+    else delete updated.category;
+    return updated;
+  }));
   editDialog.close();
   announce('任务已更新。');
 });

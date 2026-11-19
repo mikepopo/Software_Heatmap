@@ -36,6 +36,11 @@
     </div>
     <form id="compose" class="compose">
       <input id="task-name" aria-label="任务名称" placeholder="写下你想完成的一件事" maxlength="120" autocomplete="off" required>
+      <select id="task-category" class="category-select" aria-label="任务分类" title="选择任务分类">
+        <option value="学习">学习</option>
+        <option value="生活">生活</option>
+        <option value="锻炼">锻炼</option>
+      </select>
       <button type="submit" class="button primary">＋ 添加</button>
     </form>
     <div class="toolbar">
@@ -75,6 +80,12 @@
   <form id="edit-form" class="dialog-form">
     <h2 id="edit-heading">编辑任务</h2>
     <label>名称<input id="edit-name" required maxlength="120"></label>
+    <label>分类<select id="edit-category">
+      <option value="">未分类</option>
+      <option value="学习">学习</option>
+      <option value="生活">生活</option>
+      <option value="锻炼">锻炼</option>
+    </select></label>
     <div class="dialog-actions"><button type="button" class="button" id="edit-cancel">取消</button><button type="submit" class="button primary">保存</button></div>
   </form>
 </dialog>

@@ -51,7 +51,9 @@
 </main>
 <script>
 /* 夜间维护生成日期快照；实时打卡来自 reading-state.json。 */
-const READ_DATES = [];
+const READ_DATES = [
+  "2026-11-22"
+];
 const EXPERIMENT_DATES = []; /* 未使用 */
 (async()=>{
  const readingState = await PaperData.load();

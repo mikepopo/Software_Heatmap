@@ -1,9 +1,24 @@
 {
   "schemaVersion": 1,
-  "revision": 15,
-  "updatedAt": "2026-11-18T10:57:27.312Z",
+  "revision": 16,
+  "updatedAt": "2026-11-22T13:34:01.882Z",
   "legacyReadDates": [],
-  "papers": [],
+  "papers": [
+    {
+      "id": "paper-b23c64d4758e8d6ff8f43042a359263b69c7a298c147fa266ab6b39ae6bc6fda",
+      "title": "UR&R_CVPR_2021",
+      "originalFileName": "UR&R_CVPR_2021.pdf",
+      "pdf": "papers/b23c64d4758e8d6ff8f43042a359263b69c7a298c147fa266ab6b39ae6bc6fda.pdf",
+      "addedAt": "2026-11-22T13:34:01.882Z",
+      "stages": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
   "undoHistory": [
     {
       "paperId": "legacy-unsupervised-rr",

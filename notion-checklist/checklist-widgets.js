@@ -123,6 +123,7 @@ function readCurrentRecords() {
   return emptyRecords();
 }
 
+let cloudSync = null;
 let records = emptyRecords();
 try {
   records = readCurrentRecords();
@@ -152,6 +153,11 @@ let forestPage = 0;
 let forestPageScope = '';
 
 function saveRecords(nextRecords) {
+  if (cloudSync?.active()) {
+    cloudSync.enqueue(latestRecords(), nextRecords);
+    records = cloudSync.view();
+    return;
+  }
   records = nextRecords;
   try {
     localStorage.setItem(STORE, JSON.stringify({ version: 4, ...records }));
@@ -162,6 +168,7 @@ function saveRecords(nextRecords) {
 }
 
 function latestRecords() {
+  if (cloudSync?.active()) return cloudSync.view();
   try {
     if (byId('storage-warning').hidden) return readCurrentRecords();
   } catch {
@@ -1043,7 +1050,7 @@ bindTaskForm(byId('edit-form'), () => {
 
 byId('export')?.addEventListener('click', () => {
   flushRecap();
-  const data = JSON.stringify({ version: 4, ...records }, null, 2);
+  const data = JSON.stringify({ version: 4, ...latestRecords() }, null, 2);
   const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
   const link = document.createElement('a');
   link.href = url;
@@ -1071,7 +1078,7 @@ byId('import-file')?.addEventListener('change', async event => {
     confirm('无法导入', '请选择由此页面导出的完整 JSON 备份。', '知道了', null);
     return;
   }
-  confirm('导入备份', '导入会替换浏览器中现有的清单、打卡、复盘和森林记录。', '导入', () => {
+  confirm('导入备份', '导入会替换当前清单、打卡、复盘和森林记录；登录后修改将同步到其他设备。请先导出备份。', '导入', () => {
     clearTimeout(recapTimer);
     pendingRecap = null;
     saveRecords(imported);
@@ -1102,6 +1109,7 @@ window.addEventListener('storage', event => {
       if (choice?.today === today) selectDay(choice.day, false);
       return;
     }
+    if (cloudSync?.active()) return;
     if (event.key !== STORE && event.key !== null) return;
     const previous = records;
     records = readCurrentRecords();
@@ -1151,3 +1159,167 @@ if (panel === 'forest') {
 render();
 updateClock();
 setInterval(updateClock, 15000);
+
+/* Authenticated cloud sync: preserve legacy local storage, isolate per-user caches, merge concurrent changes. */
+function makeCloudPatch(before,after,migrate=false){
+ const changes=[], recaps={};
+ for(const day of new Set([...Object.keys(before.days),...Object.keys(after.days)])){
+  const a=new Map((before.days[day]||[]).map(t=>[t.id,t])),b=new Map((after.days[day]||[]).map(t=>[t.id,t]));
+  if(!migrate)for(const id of a.keys())if(!b.has(id))changes.push({day,id,kind:'delete'});
+  for(const [id,task] of b){
+   const prior=a.get(id);
+   if(!prior){changes.push({day,id,kind:'add',task});continue}
+   const fields={};
+   for(const field of ['title','done','category','tree'])if(prior[field]!==task[field])fields[field]=task[field]??null;
+   if(Object.keys(fields).length)changes.push({day,id,kind:'edit',fields});
+  }
+ }
+ for(const day of new Set([...Object.keys(before.recaps),...Object.keys(after.recaps)]))if(before.recaps[day]!==after.recaps[day])recaps[day]=after.recaps[day]??null;
+ return {changes,recaps,peak:after.forest.peak,species:before.forest.species!==after.forest.species?after.forest.species:null,migrate};
+}
+function applyCloudPatch(input,patch){
+ const next=JSON.parse(JSON.stringify(input));
+ for(const c of patch.changes){
+  const list=next.days[c.day]||[],i=list.findIndex(t=>t.id===c.id);
+  if(c.kind==='add'&&i<0)list.push({...c.task});
+  if(c.kind==='delete'&&i>=0)list.splice(i,1);
+  if(c.kind==='edit'&&i>=0)for(const [field,value] of Object.entries(c.fields)){if(value===null)delete list[i][field];else list[i][field]=value}
+  if(list.length)next.days[c.day]=list;else delete next.days[c.day];
+ }
+ for(const [day,value] of Object.entries(patch.recaps)){
+  if(patch.migrate&&next.recaps[day])continue;
+  if(value===null)delete next.recaps[day];else next.recaps[day]=value;
+ }
+ next.forest.peak=Math.max(next.forest.peak,patch.peak,Object.values(next.days).flat().filter(t=>t.done).length);
+ if(patch.species&&!patch.migrate)next.forest.species=patch.species;
+ return next;
+}
+async function installChecklistCloud(){
+ const host=document.querySelector('.shell');if(!host)return;
+ const bar=document.createElement('details');
+ bar.className='cloud-sync';
+ bar.style.cssText='margin:4px 0 8px;padding:4px 8px;border:1px solid #d7e5db;border-radius:8px;font:inherit;font-size:12px;color:inherit';
+ bar.innerHTML='<summary style="cursor:pointer">云同步 · 正在连接…</summary><div style="display:grid;gap:6px;padding:8px 0"><form style="display:grid;gap:6px"><input type="email" aria-label="邮箱" placeholder="邮箱" autocomplete="email" required style="width:100%;box-sizing:border-box"><input type="password" aria-label="密码" placeholder="密码（至少8位）" autocomplete="current-password" minlength="8" required style="width:100%;box-sizing:border-box"><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="button" type="submit">登录</button><button class="button" type="button" data-register>注册</button></div></form><div data-controls hidden><button class="button" type="button" data-retry>立即同步</button> <button class="button" type="button" data-migrate>迁移本机旧数据</button> <button class="button" type="button" data-logout>退出登录</button></div><span role="status" data-note>电脑和手机请使用同一个账号。</span></div>';
+ host.prepend(bar);
+ const summary=bar.querySelector('summary'),form=bar.querySelector('form'),controls=bar.querySelector('[data-controls]'),note=bar.querySelector('[data-note]');
+ const email=form.querySelector('[type=email]'),password=form.querySelector('[type=password]');
+ const status=(title,detail)=>{summary.textContent='云同步 · '+title;if(detail!==undefined)note.textContent=detail};
+ let durable=true;
+ const get=k=>{try{return localStorage.getItem(k)}catch{durable=false;return null}};
+ const put=(k,v)=>{try{localStorage.setItem(k,v);return true}catch{durable=false;return false}};
+ const remove=k=>{try{localStorage.removeItem(k)}catch{durable=false}};
+ let client;
+ try{
+  if(!globalThis.supabase?.createClient)await new Promise((resolve,reject)=>{
+   const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.js';
+   s.integrity='sha384-A97u3Qnt9GZHURO9YJZRe7VQgGUeFzcv6I1oIGnUTxQrCxnpQMwR0/G8F2zt9abZ';s.crossOrigin='anonymous';s.onload=resolve;s.onerror=reject;document.head.append(s);
+  });
+  client=globalThis.supabase.createClient('https://eubjpbheryecjofphluc.supabase.co',"sb_publishable_LdJwDikOC_4_VYOpH15nCw_trqRyRxn",{auth:{storageKey:'daily-checklist.supabase.session.v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+ }catch{
+  status('连接失败','无法加载云同步组件，旧记录仍保存在本机。联网后刷新页面。');form.style.display='none';return;
+ }
+ let uid=null,generation=0,busy=false,base={revision:0,records:emptyRecords()},failed=false;
+ const memory=new Map(),migrated=new Set();
+ const root=()=> 'daily-checklist.cloud.v1.'+uid+'.';
+ function cacheBase(value){
+  const revision=Number(value.revision);
+  if(!Number.isSafeInteger(revision)||revision<0)throw Error('Invalid revision');
+  const validated=validateRecords(value.records);
+  if(revision<base.revision)return;
+  base={revision,records:validated};put(root()+'base',JSON.stringify({revision,records:{version:4,...validated}}));
+ }
+ function loadBase(){
+  const raw=get(root()+'base');if(!raw)return;
+  try{const v=JSON.parse(raw),revision=Number(v.revision);if(Number.isSafeInteger(revision)&&revision>=base.revision)base={revision,records:validateRecords(v.records)}}catch{}
+ }
+ function queue(){
+  if(!uid)return [];
+  const prefix=root()+'op.',entries=new Map([...memory].filter(([k])=>k.startsWith(prefix)));
+  try{
+   for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);if(!k?.startsWith(prefix))continue;
+    try{const v=JSON.parse(localStorage.getItem(k));if(v?.id&&v?.patch)entries.set(k,v)}catch{durable=false}
+   }
+  }catch{durable=false}
+  return [...entries.values()].sort((a,b)=>a.created-b.created||a.id.localeCompare(b.id));
+ }
+ function view(){loadBase();return queue().reduce((v,op)=>applyCloudPatch(v,op.patch),base.records)}
+ function refreshView(){
+  if(!uid)return;const next=view();
+  if(JSON.stringify(records)!==JSON.stringify(next)){records=next;render()}
+ }
+ function addOperation(patch){
+  if(!uid)return;
+  const op={id:crypto.randomUUID(),created:Date.now(),patch},k=root()+'op.'+op.id;
+  if(!put(k,JSON.stringify(op)))memory.set(k,op);
+  refreshView();status('待同步 '+queue().length,durable?'修改已暂存在本机，联网后上传。':'浏览器限制本地缓存，请保持页面打开并尽快同步或导出备份。');void sync();
+ }
+ async function sync(){
+  if(!uid||busy)return;
+  busy=true;const ticket=generation,owner=uid;
+  try{
+   loadBase();
+   const {data,error}=await client.from('checklist_sync_state').select('revision,records').eq('user_id',owner).maybeSingle();
+   if(ticket!==generation)return;if(error)throw error;if(data)cacheBase(data);
+   let steps=0;
+   while(steps++<40&&ticket===generation){
+    const op=queue()[0];if(!op)break;
+    const candidate=applyCloudPatch(base.records,op.patch);
+    const result=await client.rpc('checklist_sync_commit',{p_operation:op.id,p_revision:base.revision,p_records:{version:4,...candidate}});
+    if(ticket!==generation)return;if(result.error)throw result.error;
+    cacheBase(result.data);
+    if(result.data.accepted){const k=root()+'op.'+op.id;remove(k);memory.delete(k)}
+   }
+   if(ticket!==generation)return;
+   failed=false;refreshView();
+   const count=queue().length;status(count?'待同步 '+count:'已同步',count?'尚有修改等待上传。':durable?'已连接云端，其他打开的设备约5秒内更新。':'云端已连接，但此浏览器可能无法保留登录或离线记录。');
+  }catch{
+   if(ticket===generation){failed=true;refreshView();status('暂未同步 · '+queue().length+' 项',durable?'网络或会话暂不可用，修改保留在本机，联网后重试。':'修改暂存在当前页面，请不要关闭页面并及时导出备份。')}
+  }finally{busy=false;if(ticket!==generation&&uid)void sync()}
+ }
+ function activate(session){
+  const next=session?.user?.id??null;
+  if(uid===next){if(uid)void sync();else status('未登录','电脑和手机请使用同一个账号。未登录时仅保存在本机。');return}
+  flushRecap();generation++;uid=next;base={revision:0,records:emptyRecords()};failed=false;
+  form.style.display=uid?'none':'grid';controls.hidden=!uid;bar.querySelector('[data-migrate]').hidden=!uid||panel!=='tasks';
+  if(uid){loadBase();records=view();render();status('正在同步…');bar.open=false;void sync()}
+  else{try{records=readCurrentRecords()}catch{records=emptyRecords()}render();status('未登录','已退出云账号，当前显示旧版本机记录。')}
+ }
+ cloudSync={active:()=>Boolean(uid),view,enqueue:(before,after)=>addOperation(makeCloudPatch(before,after))};
+ async function authenticate(register){
+  if(!form.reportValidity())return;
+  const credentials={email:email.value.trim(),password:password.value};
+  for(const btn of form.querySelectorAll('button'))btn.disabled=true;
+  try{
+   const result=register?await client.auth.signUp(credentials):await client.auth.signInWithPassword(credentials);
+   if(result.error)throw result.error;
+   if(result.data.session)activate(result.data.session);
+   else status('请验证邮箱','请打开验证邮件完成注册，再返回此处登录。验证后即使跳转失败也可重新登录。');
+  }catch(error){status('登录/注册未完成',error?.message||'请检查账号与网络。')}
+  finally{password.value='';for(const btn of form.querySelectorAll('button'))btn.disabled=false}
+ }
+ form.addEventListener('submit',e=>{e.preventDefault();void authenticate(false)});
+ bar.querySelector('[data-register]').addEventListener('click',()=>void authenticate(true));
+ bar.querySelector('[data-retry]').addEventListener('click',()=>void sync());
+ bar.querySelector('[data-logout]').addEventListener('click',async()=>{
+  flushRecap();await sync();
+  if(queue().length&&!window.confirm('还有未上传的记录，退出后需要重新登录才能继续同步。确认退出？'))return;
+  const result=await client.auth.signOut({scope:'local'});if(result.error)status('退出失败','请检查网络后重试。');else activate(null);
+ });
+ bar.querySelector('[data-migrate]').addEventListener('click',()=>{
+  if(!uid)return;
+  const marker=root()+'migrated';
+  if(migrated.has(marker)||get(marker)){status('已迁移过','为避免重复恢复已删除任务，本设备不再自动迁移。如需恢复，请使用数据备份导入。');return}
+  let legacy;try{legacy=readCurrentRecords()}catch{status('迁移失败','无法读取旧版记录，请使用原备份导入。');return}
+  if(!Object.keys(legacy.days).length&&!Object.keys(legacy.recaps).length){status('没有旧记录','如果记录在其他电脑，请到原设备的 Notion 页面迁移。');return}
+  if(!window.confirm('将本机旧清单合并到当前云账号？已有同 ID 任务及复盘保留云端版本，旧本机记录不删除。'))return;
+  addOperation(makeCloudPatch(emptyRecords(),legacy,true));migrated.add(marker);put(marker,'1');
+ });
+ window.addEventListener('storage',e=>{if(uid&&(e.key===null||e.key?.startsWith(root()))){refreshView();if(e.key?.includes('.op.'))void sync()}});
+ window.addEventListener('online',()=>void sync());window.addEventListener('focus',()=>void sync());
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)void sync()});
+ client.auth.onAuthStateChange((_event,session)=>setTimeout(()=>activate(session),0));
+ try{const {data,error}=await client.auth.getSession();if(error)throw error;activate(data.session)}catch{status('未登录','无法恢复登录，请重新登录。')}
+ setInterval(()=>{if(uid&&(!document.hidden||failed||queue().length))void sync()},5000);
+}
+void installChecklistCloud();

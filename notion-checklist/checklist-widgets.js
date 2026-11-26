@@ -1201,6 +1201,13 @@ async function installChecklistCloud(){
  bar.style.cssText='margin:4px 0 8px;padding:4px 8px;border:1px solid #d7e5db;border-radius:8px;font:inherit;font-size:12px;color:inherit';
  bar.innerHTML='<summary style="cursor:pointer">云同步 · 正在连接…</summary><div style="display:grid;gap:6px;padding:8px 0"><form style="display:grid;gap:6px"><input type="email" aria-label="邮箱" placeholder="邮箱" autocomplete="email" required style="width:100%;box-sizing:border-box"><input type="password" aria-label="密码" placeholder="密码（至少8位）" autocomplete="current-password" minlength="8" required style="width:100%;box-sizing:border-box"><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="button" type="submit">登录</button><button class="button" type="button" data-register>注册</button></div></form><div data-controls hidden><button class="button" type="button" data-retry>立即同步</button> <button class="button" type="button" data-migrate>迁移本机旧数据</button> <button class="button" type="button" data-logout>退出登录</button></div><span role="status" data-note>电脑和手机请使用同一个账号。</span></div>';
  host.prepend(bar);
+ const recovery=document.createElement('div');
+ recovery.hidden=true;
+ recovery.style.cssText='margin:4px 0 8px;padding:8px;border:1px solid #b3cdb9;border-radius:8px;font-size:12px;display:none';
+ const recoveryText=document.createElement('div'), restoreButton=document.createElement('button'), cloudButton=document.createElement('button');
+ restoreButton.type=cloudButton.type='button';restoreButton.className=cloudButton.className='button';
+ restoreButton.textContent='恢复并同步旧数据';cloudButton.textContent='仅查看云端';
+ recovery.append(recoveryText,restoreButton,cloudButton);bar.after(recovery);
  const summary=bar.querySelector('summary'),form=bar.querySelector('form'),controls=bar.querySelector('[data-controls]'),note=bar.querySelector('[data-note]');
  const email=form.querySelector('[type=email]'),password=form.querySelector('[type=password]');
  const status=(title,detail)=>{summary.textContent='云同步 · '+title;if(detail!==undefined)note.textContent=detail};
@@ -1218,7 +1225,7 @@ async function installChecklistCloud(){
  }catch{
   status('连接失败','无法加载云同步组件，旧记录仍保存在本机。联网后刷新页面。');form.style.display='none';return;
  }
- let uid=null,generation=0,busy=false,base={revision:0,records:emptyRecords()},failed=false;
+ let uid=null,generation=0,busy=false,base={revision:0,records:emptyRecords()},failed=false,localPreview=false;
  const memory=new Map(),migrated=new Set();
  const root=()=> 'daily-checklist.cloud.v1.'+uid+'.';
  function cacheBase(value){
@@ -1244,9 +1251,22 @@ async function installChecklistCloud(){
   }catch{durable=false}
   return [...entries.values()].sort((a,b)=>a.created-b.created||a.id.localeCompare(b.id));
  }
+ function legacyRecords(){
+  try{return readCurrentRecords()}catch{return null}
+ }
+ function showRecovery(){
+  const legacy=legacyRecords();
+  const count=legacy?Object.values(legacy.days).reduce((n,list)=>n+list.length,0):0;
+  const days=legacy?Object.keys(legacy.recaps).length:0;
+  const pending=Boolean(uid&&legacy&&(count||days)&&!get(root()+'migrated')&&!migrated.has(root()+'migrated'));
+  recovery.hidden=!pending;recovery.style.display=pending?'block':'none';
+  restoreButton.hidden=cloudButton.hidden=panel!=='tasks';
+  recoveryText.textContent=pending?(localPreview?'正在显示本机旧记录':'发现尚未迁移的本机记录')+' · '+count+' 项任务 / '+days+' 条复盘。'+(panel==='tasks'?' 点击恢复并同步旧数据。':' 请在任务清单模块恢复。'):'';
+  return pending;
+ }
  function view(){loadBase();return queue().reduce((v,op)=>applyCloudPatch(v,op.patch),base.records)}
  function refreshView(){
-  if(!uid)return;const next=view();
+  if(!uid)return;const next=localPreview?(legacyRecords()||records):view();
   if(JSON.stringify(records)!==JSON.stringify(next)){records=next;render()}
  }
  function addOperation(patch){
@@ -1274,7 +1294,9 @@ async function installChecklistCloud(){
    }
    if(ticket!==generation)return;
    failed=false;refreshView();
-   const count=queue().length;status(count?'待同步 '+count:'已同步',count?'尚有修改等待上传。':durable?'已连接云端，其他打开的设备约5秒内更新。':'云端已连接，但此浏览器可能无法保留登录或离线记录。');
+   const count=queue().length;
+   if(showRecovery()&&localPreview)status('旧数据待恢复','本机历史记录仍可见，尚未上传。请在任务清单中点击恢复并同步旧数据。');
+   else status(count?'待同步 '+count:'已同步',count?'尚有修改等待上传。':durable?'已连接云端，其他打开的设备约5秒内更新。':'云端已连接，但此浏览器可能无法保留登录或离线记录。');
   }catch{
    if(ticket===generation){failed=true;refreshView();status('暂未同步 · '+queue().length+' 项',durable?'网络或会话暂不可用，修改保留在本机，联网后重试。':'修改暂存在当前页面，请不要关闭页面并及时导出备份。')}
   }finally{busy=false;if(ticket!==generation&&uid)void sync()}
@@ -1282,12 +1304,16 @@ async function installChecklistCloud(){
  function activate(session){
   const next=session?.user?.id??null;
   if(uid===next){if(uid)void sync();else status('未登录','电脑和手机请使用同一个账号。未登录时仅保存在本机。');return}
-  flushRecap();generation++;uid=next;base={revision:0,records:emptyRecords()};failed=false;
+  flushRecap();generation++;uid=next;base={revision:0,records:emptyRecords()};failed=false;localPreview=false;
   form.style.display=uid?'none':'grid';controls.hidden=!uid;bar.querySelector('[data-migrate]').hidden=!uid||panel!=='tasks';
-  if(uid){loadBase();records=view();render();status('正在同步…');bar.open=false;void sync()}
-  else{try{records=readCurrentRecords()}catch{records=emptyRecords()}render();status('未登录','已退出云账号，当前显示旧版本机记录。')}
+  if(uid){
+   loadBase();
+   localPreview=showRecovery();
+   records=localPreview?(legacyRecords()||records):view();showRecovery();render();
+   status(localPreview?'旧数据待恢复':'正在同步…');bar.open=localPreview&&panel==='tasks';void sync();
+  }else{showRecovery();try{records=readCurrentRecords()}catch{records=emptyRecords()}render();status('未登录','已退出云账号，当前显示旧版本机记录。')}
  }
- cloudSync={active:()=>Boolean(uid),view,enqueue:(before,after)=>addOperation(makeCloudPatch(before,after))};
+ cloudSync={active:()=>Boolean(uid&&!localPreview),view,enqueue:(before,after)=>addOperation(makeCloudPatch(before,after))};
  async function authenticate(register){
   if(!form.reportValidity())return;
   const credentials={email:email.value.trim(),password:password.value};
@@ -1308,7 +1334,7 @@ async function installChecklistCloud(){
   if(queue().length){status('仍有待同步记录','为防止丢失，请先联网同步，再退出账号。');return;}
   const result=await client.auth.signOut({scope:'local'});if(result.error)status('退出失败','请检查网络后重试。');else activate(null);
  });
- bar.querySelector('[data-migrate]').addEventListener('click',()=>{
+ function migrateLegacy(){
   if(!uid)return;
   const marker=root()+'migrated';
   if(migrated.has(marker)||get(marker)){status('已迁移过','为避免重复恢复已删除任务，本设备不再自动迁移。如需恢复，请使用数据备份导入。');return}
@@ -1316,10 +1342,21 @@ async function installChecklistCloud(){
   if(!Object.keys(legacy.days).length&&!Object.keys(legacy.recaps).length){status('没有旧记录','如果记录在其他电脑，请到原设备的 Notion 页面迁移。');return}
   confirm('迁移本机旧数据','将本机旧清单合并到当前云账号？已有同 ID 任务及复盘保留云端版本，旧本机记录不删除。','迁移',()=>{
    if(marker!==root()+'migrated')return;
-   addOperation(makeCloudPatch(emptyRecords(),legacy,true));migrated.add(marker);put(marker,'1');
+   flushRecap();
+   const latestLegacy=legacyRecords()||legacy;
+   localPreview=false;
+   addOperation(makeCloudPatch(emptyRecords(),latestLegacy,true));migrated.add(marker);put(marker,'1');showRecovery();refreshView();void sync();
   });
+ }
+ bar.querySelector('[data-migrate]').addEventListener('click',migrateLegacy);
+ restoreButton.addEventListener('click',migrateLegacy);
+ cloudButton.addEventListener('click',()=>{flushRecap();localPreview=false;refreshView();showRecovery();void sync()});
+ window.addEventListener('storage',e=>{
+  if(!uid)return;
+  if(e.key===root()+'migrated'&&get(root()+'migrated')){localPreview=false;refreshView();showRecovery();void sync();return}
+  if(e.key===null||e.key?.startsWith(root())){refreshView();showRecovery();if(e.key?.includes('.op.'))void sync()}
+  else if(e.key===STORE&&localPreview){refreshView();showRecovery()}
  });
- window.addEventListener('storage',e=>{if(uid&&(e.key===null||e.key?.startsWith(root()))){refreshView();if(e.key?.includes('.op.'))void sync()}});
  window.addEventListener('online',()=>void sync());window.addEventListener('focus',()=>void sync());
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)void sync()});
  client.auth.onAuthStateChange((_event,session)=>setTimeout(()=>activate(session),0));

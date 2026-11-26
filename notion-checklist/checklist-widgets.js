@@ -1188,7 +1188,11 @@ async function installChecklistCloud(){
  restoreButton.textContent='恢复并同步旧数据';cloudButton.textContent='仅查看云端';
  const legacyBackup=document.createElement('button');
  legacyBackup.type='button';legacyBackup.className='button';legacyBackup.textContent='导出本机原始记录';
- recovery.append(recoveryText,restoreButton,cloudButton,legacyBackup);bar.after(recovery);
+ recovery.append(recoveryText,restoreButton,cloudButton);bar.after(recovery);
+ const backupMenu=document.querySelector('#backup .menu');
+ if(backupMenu && panel==='tasks')backupMenu.append(legacyBackup);
+ else recovery.append(legacyBackup);
+ legacyBackup.hidden=true;
  legacyBackup.addEventListener('click',()=>{
   const legacy=legacyRecords();
   if(!legacy){status('无法读取旧记录','请保留浏览器数据并回到原来使用的设备。');return}
@@ -1246,11 +1250,11 @@ async function installChecklistCloud(){
   const count=legacy?Object.values(legacy.days).reduce((n,list)=>n+list.length,0):0;
   const days=legacy?Object.keys(legacy.recaps).length:0;
   const pending=Boolean(uid&&legacy&&(count||days)&&!get(root()+'migrated')&&!migrated.has(root()+'migrated')&&!queue().some(op=>op.patch.migrate));
-  const diagnostic=Boolean(uid&&panel==='tasks');
-  recovery.hidden=!(pending||diagnostic);recovery.style.display=pending||diagnostic?'block':'none';
+  // Only show a recovery notice when legacy records actually need migration.
+  recovery.hidden=!pending;recovery.style.display=pending?'block':'none';
   restoreButton.hidden=cloudButton.hidden=!pending||panel!=='tasks';
   legacyBackup.hidden=panel!=='tasks'||!legacy||!(count||days);
-  recoveryText.textContent=pending?(localPreview?'正在显示本机旧记录':'发现尚未迁移的本机记录')+' · '+count+' 项任务 / '+days+' 条复盘。'+(panel==='tasks'?' 点击恢复并同步旧数据。':' 请在任务清单模块恢复。'):diagnostic?(!legacy?'本机旧记录读取失败；请勿清理浏览器缓存。':count||days?'本机原始备份仍保留：'+count+' 项任务 / '+days+' 条复盘。':'当前浏览器存储中未检测到旧任务。请在原来使用的设备及原来的 Notion 页面中检查。'):'';
+  recoveryText.textContent=pending?(localPreview?'正在显示本机旧记录':'发现尚未迁移的本机记录')+' · '+count+' 项任务 / '+days+' 条复盘。'+(panel==='tasks'?' 点击恢复并同步旧数据。':' 请在任务清单模块恢复。'):'';
   return pending;
  }
  function view(){loadBase();return queue().reduce((v,op)=>applyCloudPatch(v,op.patch),base.records)}

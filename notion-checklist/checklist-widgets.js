@@ -149,8 +149,7 @@ let recapTimer;
 let celebrationTimer;
 let forestRange = 'day';
 let forestInspection = null;
-let forestPage = 0;
-let forestPageScope = '';
+let forestDisplayScope = '';
 
 function saveRecords(nextRecords, beforeRecords = records) {
   if (cloudSync?.active()) {
@@ -262,34 +261,46 @@ function forestEntries() {
 }
 
 const FOREST_MIN_SIDE = 5;
-const FOREST_MAX_SIDE = 7;
-const FOREST_PAGE_SIZE = FOREST_MAX_SIDE ** 2;
-const forestSlots = [[2,2], [1,2], [3,1], [2,3], [1,0], [3,3], [0,3], [4,2]];
-for (let side = FOREST_MIN_SIDE; side <= FOREST_MAX_SIDE; side++) {
-  for (let row = 0; row < side; row++) {
-    for (let col = 0; col < side; col++) {
-      if (!forestSlots.some(([x, y]) => x === col && y === row)) forestSlots.push([col, row]);
-    }
-  }
-}
+let forestSlots = [[2,2], [1,2], [3,1], [2,3], [1,0], [3,3], [0,3], [4,2]];
+const forestUsedSlots = new Set(forestSlots.map(([x,y]) => x + ':' + y));
+let forestAllocatedSide = 0;
 
 function forestSide(count) {
-  return Math.min(FOREST_MAX_SIDE, Math.max(FOREST_MIN_SIDE, Math.ceil(Math.sqrt(count))));
+  return Math.max(FOREST_MIN_SIDE, Math.ceil(Math.sqrt(count)));
+}
+
+function ensureForestSlots(side) {
+  // Extend the existing orchard rather than starting a new page.
+  for (let size = Math.max(FOREST_MIN_SIDE, forestAllocatedSide + 1); size <= side; size++) {
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col < size; col++) {
+        if (size > FOREST_MIN_SIDE && row !== size - 1 && col !== size - 1) continue;
+        const key = col + ':' + row;
+        if (!forestUsedSlots.has(key)) {
+          forestUsedSlots.add(key);
+          forestSlots.push([col,row]);
+        }
+      }
+    }
+  }
+  forestAllocatedSide = Math.max(forestAllocatedSide, side);
 }
 
 function orchardPlot(side, column, row) {
   const depth = row / (side - 1);
   const across = column / (side - 1) - .5;
   const expansion = side - FOREST_MIN_SIDE;
-  const spread = .55 + depth * .15 + expansion * .043;
-  const stagger = row % 2 ? .028 : -.01;
-  const farEdge = .555 - expansion * .035;
-  // A larger orchard extends uphill and away from the viewer.
+  const spread = Math.min(.87, .55 + depth * .15 + Math.min(expansion, 5) * .043);
+  const stagger = (row % 2 ? .028 : -.01) * Math.min(1, 7 / side);
+  const farEdge = Math.max(.465, .555 - expansion * .035);
+  const nearEdge = .89 + Math.min(.045, Math.max(0, side - 7) * .003);
+  const jitter = Math.min(1, 7 / side);
   const x = .50 + .014 * (1 - depth) + across * spread + stagger
-    + (((column * 13 + row * 7) % 9) - 4) * .0028;
-  const y = farEdge + depth * (.89 - farEdge)
-    - across * .036 + (((column * 11 + row * 17) % 7) - 3) * .0019;
-  const width = 7.9 + 4.2 * depth - .99 * expansion + ((column * 7 + row * 3) % 5) * .14;
+    + (((column * 13 + row * 7) % 9) - 4) * .0028 * jitter;
+  const y = farEdge + depth * (nearEdge - farEdge)
+    - across * .036 + (((column * 11 + row * 17) % 7) - 3) * .0019 * jitter;
+  const baseWidth = 7.9 + 4.2 * depth - .99 * Math.min(expansion, 2) + ((column * 7 + row * 3) % 5) * .14;
+  const width = side <= 7 ? baseWidth : Math.min(baseWidth * 7 / side, spread * 100 / (side - 1) * .85);
   return { x, y, width };
 }
 
@@ -312,7 +323,10 @@ function makeForestTree({ day, task }, inspected, index, side) {
   button.title = shortDate(day) + ' · ' + TREE_SPECIES[id].name + ' · ' + task.title;
   button.setAttribute('aria-label', button.title);
   button.setAttribute('aria-pressed', String(inspected?.day === day && inspected?.task.id === task.id));
-  button.append(treeImage(id));
+  const art = treeImage(id);
+  // Avoid hundreds of simultaneous idle animations in the annual view.
+  if (side > 10) art.style.animation = 'none';
+  button.append(art);
   item.append(button);
   return item;
 }
@@ -356,21 +370,16 @@ function renderForest() {
   const total = totalTrees(records.days);
   const peak = Math.max(records.forest.peak, total);
   const scope = forestScope();
-  if (forestPageScope !== scope) {
-    forestPageScope = scope;
-    forestPage = 0;
+  if (forestDisplayScope !== scope) {
+    forestDisplayScope = scope;
     forestInspection = null;
   }
-  const pages = Math.max(1, Math.ceil(entries.length / FOREST_PAGE_SIZE));
-  forestPage = Math.min(forestPage, pages - 1);
-  const first = forestPage * FOREST_PAGE_SIZE;
-  const visible = entries.slice(first, first + FOREST_PAGE_SIZE);
+  const visible = entries;
   const side = forestSide(visible.length);
+  ensureForestSlots(side);
   const capacity = side ** 2;
-  let capacityLabel = '当前果园 · 已种 ' + visible.length + ' / ' + capacity + ' 棵';
-  if (visible.length === capacity && forestPage === pages - 1) {
-    capacityLabel += side === FOREST_MAX_SIDE ? ' · 下一棵开辟新果园' : ' · 下一棵可扩至 ' + (side + 1) ** 2 + ' 棵';
-  }
+  let capacityLabel = '当前果园 · 已种 ' + visible.length + ' / ' + capacity + ' 棵 · ' + side + '×' + side + ' 林地';
+  if (visible.length === capacity) capacityLabel += ' · 下一棵自动扩建';
   byId('forest-capacity').textContent = capacityLabel;
   const inspected = visible.find(({ day, task }) => day === forestInspection?.day && task.id === forestInspection?.id);
   forestInspection = inspected ? { day: inspected.day, id: inspected.task.id } : null;
@@ -384,7 +393,9 @@ function renderForest() {
   const active = document.activeElement;
   const focusDay = active?.dataset.treeDay;
   const focusId = active?.dataset.treeId;
-  grove.replaceChildren(...visible.map((entry, index) => makeForestTree(entry, inspected, index, side)));
+  const fragment = document.createDocumentFragment();
+  visible.forEach((entry, index) => fragment.append(makeForestTree(entry, inspected, index, side)));
+  grove.replaceChildren(fragment);
   grove.hidden = visible.length === 0;
   if (focusDay) grove.querySelector('[data-tree-day="' + focusDay + '"][data-tree-id="' + focusId + '"]')?.focus({ preventScroll: true });
   const status = byId('forest-empty');
@@ -396,14 +407,8 @@ function renderForest() {
   const detail = byId('forest-detail');
   detail.hidden = !inspected;
   detail.textContent = inspected ? shortDate(inspected.day) + ' · ' + TREE_SPECIES[inspected.task.tree ?? 'pine'].name + ' · ' + inspected.task.title : '';
-  byId('forest-pages').hidden = pages <= 1;
-  const pageSelect = byId('forest-page-select');
-  if (pageSelect.options.length !== pages) {
-    pageSelect.replaceChildren(...Array.from({ length: pages }, (_, index) => new Option((index + 1) + ' / ' + pages, String(index))));
-  }
-  pageSelect.value = String(forestPage);
-  byId('forest-prev-page').disabled = forestPage === 0;
-  byId('forest-next-page').disabled = forestPage === pages - 1;
+  // Keep older cached HTML compatible, but never expose pagination.
+  if (byId('forest-pages')) byId('forest-pages').hidden = true;
   renderForestGuide(peak, total);
 }
 
@@ -411,11 +416,6 @@ function animateForestTree(day, id) {
   const entries = forestEntries();
   const position = entries.findIndex(entry => entry.day === day && entry.task.id === id);
   if (position < 0) return;
-  const page = Math.floor(position / FOREST_PAGE_SIZE);
-  if (page !== forestPage) {
-    forestPage = page;
-    renderForest();
-  }
   const query = '[data-tree-day="' + day + '"][data-tree-id="' + id + '"]';
   byId('forest-trees').querySelector(query)?.classList.add('tree-growing');
 }
@@ -426,11 +426,8 @@ function showPlantingFeedback(completedToday, unlocked) {
   const feedback = ['种下 1 棵树'];
   if (completedToday) feedback.push('今日任务全部完成');
   if (unlocked) feedback.push('解锁' + unlocked.name);
-  const finalPlotCount = (entries.length - 1) % FOREST_PAGE_SIZE + 1;
-  if (entries.length > FOREST_PAGE_SIZE && finalPlotCount === 1) {
-    feedback.push('新增一片林地');
-  } else if (forestSide(finalPlotCount) > forestSide(finalPlotCount - 1)) {
-    const side = forestSide(finalPlotCount);
+  if (forestSide(entries.length) > forestSide(Math.max(0, entries.length - 1))) {
+    const side = forestSide(entries.length);
     feedback.push('林地扩至 ' + side + '×' + side);
   }
   byId('completion-feedback').textContent = feedback.join(' · ');
@@ -845,28 +842,10 @@ document.querySelector('.forest-periods')?.addEventListener('click', event => {
   renderForest();
 });
 
-byId('forest-prev-page')?.addEventListener('click', () => {
-  if (forestPage > 0) {
-    forestPage--;
-    renderForest();
-  }
-});
-byId('forest-next-page')?.addEventListener('click', () => {
-  if (!byId('forest-next-page').disabled) {
-    forestPage++;
-    renderForest();
-  }
-});
-
 byId('forest-trees')?.addEventListener('click', event => {
   const tree = event.target.closest('[data-tree-id]');
   if (!tree) return;
   forestInspection = { day: tree.dataset.treeDay, id: tree.dataset.treeId };
-  renderForest();
-});
-
-byId('forest-page-select')?.addEventListener('change', event => {
-  forestPage = Number(event.target.value);
   renderForest();
 });
 

@@ -1226,7 +1226,7 @@ async function installChecklistCloud(){
   const revision=Number(value.revision);
   if(!Number.isSafeInteger(revision)||revision<0)throw Error('Invalid revision');
   const validated=validateRecords(value.records);
-  if(revision<=base.revision && get(root()+'base'))return;
+  if(revision<base.revision || (revision===base.revision && get(root()+'base')))return;
   base={revision,records:validated};put(root()+'base',JSON.stringify({revision,records:{version:4,...validated}}));
  }
  function loadBase(){
@@ -1305,7 +1305,7 @@ async function installChecklistCloud(){
  bar.querySelector('[data-retry]').addEventListener('click',()=>void sync());
  bar.querySelector('[data-logout]').addEventListener('click',async()=>{
   flushRecap();await sync();
-  if(queue().length&&!window.confirm('还有未上传的记录，退出后需要重新登录才能继续同步。确认退出？'))return;
+  if(queue().length){status('仍有待同步记录','为防止丢失，请先联网同步，再退出账号。');return;}
   const result=await client.auth.signOut({scope:'local'});if(result.error)status('退出失败','请检查网络后重试。');else activate(null);
  });
  bar.querySelector('[data-migrate]').addEventListener('click',()=>{
@@ -1314,8 +1314,10 @@ async function installChecklistCloud(){
   if(migrated.has(marker)||get(marker)){status('已迁移过','为避免重复恢复已删除任务，本设备不再自动迁移。如需恢复，请使用数据备份导入。');return}
   let legacy;try{legacy=readCurrentRecords()}catch{status('迁移失败','无法读取旧版记录，请使用原备份导入。');return}
   if(!Object.keys(legacy.days).length&&!Object.keys(legacy.recaps).length){status('没有旧记录','如果记录在其他电脑，请到原设备的 Notion 页面迁移。');return}
-  if(!window.confirm('将本机旧清单合并到当前云账号？已有同 ID 任务及复盘保留云端版本，旧本机记录不删除。'))return;
-  addOperation(makeCloudPatch(emptyRecords(),legacy,true));migrated.add(marker);put(marker,'1');
+  confirm('迁移本机旧数据','将本机旧清单合并到当前云账号？已有同 ID 任务及复盘保留云端版本，旧本机记录不删除。','迁移',()=>{
+   if(marker!==root()+'migrated')return;
+   addOperation(makeCloudPatch(emptyRecords(),legacy,true));migrated.add(marker);put(marker,'1');
+  });
  });
  window.addEventListener('storage',e=>{if(uid&&(e.key===null||e.key?.startsWith(root()))){refreshView();if(e.key?.includes('.op.'))void sync()}});
  window.addEventListener('online',()=>void sync());window.addEventListener('focus',()=>void sync());

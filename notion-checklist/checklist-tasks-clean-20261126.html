@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>任务清单与一句话复盘 · 每日清单</title>
+<link rel="stylesheet" href="checklist-widgets.css">
+<script src="checklist-widgets-clean-20261126.js" defer></script>
+</head>
+<body data-panel="tasks">
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-brand" viewBox="0 0 24 24"><path d="m3 7 2 2 4-4m3 2h8M3 15l2 2 4-4m3 2h8"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M8 4v4m8-4v4M4 11h16"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-backup" viewBox="0 0 24 24"><path d="M12 4v10m-4-4 4 4 4-4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></symbol>
+  <symbol id="i-checklist" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="2"/><path d="m8 10 1.5 1.5 3-3M13 11h3m-8 5h8"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19c2-6 6-9 12-12M6 16c-2-6 3-10 13-11 0 9-4 14-11 13"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="m5 16-1 4 4-1L19 8l-3-3L5 16Zm9-9 3 3"/></symbol>
+  <symbol id="i-analytics" viewBox="0 0 24 24"><path d="M4 19h16M6 15l4-4 4 2 4-6"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14m-9-3h4m-7 3 1 12h8l1-12m-7 3v6m4-6v6"/></symbol>
+</svg>
+<main class="shell">
+  <noscript><p class="warning">请在支持 JavaScript 的浏览器中打开。</p></noscript>
+  <p class="warning" id="storage-warning" role="alert" hidden></p>
+  <section id="planner" class="card planner" aria-labelledby="planner-title">
+    <div class="planner-header">
+      <div class="card-heading"><span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-checklist"/></svg></span><h2 id="planner-title" tabindex="-1">任务清单</h2></div>
+      <div class="date-controls">
+        <button type="button" class="icon-button" id="previous" aria-label="前一天" title="前一天"><svg class="icon" aria-hidden="true"><use href="#i-left"/></svg></button>
+        <input class="date-input" type="date" id="plan-date" aria-label="计划日期" min="0001-01-01" max="9999-12-31">
+        <button type="button" class="icon-button" id="next" aria-label="后一天" title="后一天"><svg class="icon" aria-hidden="true"><use href="#i-right"/></svg></button>
+        <button type="button" class="button" id="today">今天</button>
+      </div>
+    </div>
+    <form id="compose" class="compose">
+      <input id="task-name" aria-label="任务名称" placeholder="写下你想完成的一件事" maxlength="120" autocomplete="off" required>
+      <select id="task-category" class="category-select" aria-label="任务分类" title="选择任务分类">
+        <option value="学习">学习</option>
+        <option value="生活">生活</option>
+        <option value="锻炼">锻炼</option>
+      </select>
+      <button type="submit" class="button primary">＋ 添加</button>
+    </form>
+    <div class="toolbar">
+      <div class="filters" role="group" aria-label="筛选任务">
+        <button type="button" class="filter" data-filter="all" aria-pressed="true">全部</button>
+        <button type="button" class="filter" data-filter="open" aria-pressed="false">待完成</button>
+        <button type="button" class="filter" data-filter="done" aria-pressed="false">已完成</button>
+      </div>
+      <details class="backup" id="backup">
+      <summary class="button"><svg class="icon" aria-hidden="true"><use href="#i-backup"/></svg>数据备份</summary>
+      <div class="menu">
+        <button type="button" class="button" id="export">导出备份</button>
+        <button type="button" class="button" id="import">导入备份</button>
+      </div>
+      <input type="file" id="import-file" accept="application/json,.json" hidden>
+    </details>
+    </div>
+    <ul class="tasks" id="tasks" aria-label="任务清单" hidden></ul>
+    <div class="empty" id="empty">
+      <div class="empty-icon"><svg class="icon" aria-hidden="true"><use href="#i-checklist"/></svg></div>
+      <div class="empty-content">
+        <strong id="empty-title">还没有任务</strong>
+        <p id="empty-detail">填入任务名称，按回车键添加。</p>
+      </div>
+    </div>
+    <div class="recap">
+      <div class="recap-header"><label for="recap-input">一句话复盘</label><span id="recap-state" class="recap-state" role="status"></span></div>
+      <textarea id="recap-input" rows="2" placeholder="今天最有收获的事，或明天想先做什么？"></textarea>
+    </div>
+  </section>
+</main>
+<div class="sr-only" id="announce" role="status"></div>
+<div class="completion-toast" id="completion-toast" aria-hidden="true" hidden>
+  <svg class="icon" aria-hidden="true"><use href="#i-leaf"/></svg><span id="completion-feedback"></span>
+</div>
+<dialog id="edit-dialog" aria-labelledby="edit-heading">
+  <form id="edit-form" class="dialog-form">
+    <h2 id="edit-heading">编辑任务</h2>
+    <label>名称<input id="edit-name" required maxlength="120"></label>
+    <label>分类<select id="edit-category">
+      <option value="">未分类</option>
+      <option value="学习">学习</option>
+      <option value="生活">生活</option>
+      <option value="锻炼">锻炼</option>
+    </select></label>
+    <div class="dialog-actions"><button type="button" class="button" id="edit-cancel">取消</button><button type="submit" class="button primary">保存</button></div>
+  </form>
+</dialog>
+<dialog id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+  <form method="dialog" class="dialog-form">
+    <h2 id="confirm-title">确认操作</h2>
+    <p class="note" id="confirm-message"></p>
+    <div class="dialog-actions"><button class="button" value="cancel" autofocus>取消</button><button class="button primary" id="confirm-accept" value="accept">确认</button></div>
+  </form>
+</dialog>
+</body>
+</html>

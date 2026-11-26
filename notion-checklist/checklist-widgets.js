@@ -152,9 +152,9 @@ let forestInspection = null;
 let forestPage = 0;
 let forestPageScope = '';
 
-function saveRecords(nextRecords) {
+function saveRecords(nextRecords, beforeRecords = records) {
   if (cloudSync?.active()) {
-    cloudSync.enqueue(latestRecords(), nextRecords);
+    cloudSync.enqueue(beforeRecords, nextRecords);
     records = cloudSync.view();
     return;
   }
@@ -187,7 +187,7 @@ function updateTasks(day, update) {
   if (tasks.length) days[day] = tasks;
   else delete days[day];
   const peak = Math.max(previousPeak, total - taskCounts(before).done + taskCounts(tasks).done);
-  saveRecords({ ...latest, days, forest: { ...latest.forest, peak } });
+  saveRecords({ ...latest, days, forest: { ...latest.forest, peak } }, latest);
   render();
   return previousPeak;
 }
@@ -224,7 +224,7 @@ function flushRecap() {
     const recaps = { ...latest.recaps };
     if (cleanText) recaps[day] = cleanText;
     else delete recaps[day];
-    saveRecords({ ...latest, recaps });
+    saveRecords({ ...latest, recaps }, latest);
   }
   renderRecap();
   renderHeatRecap();
@@ -1081,7 +1081,7 @@ byId('import-file')?.addEventListener('change', async event => {
   confirm('导入备份', '导入会替换当前清单、打卡、复盘和森林记录；登录后修改将同步到其他设备。请先导出备份。', '导入', () => {
     clearTimeout(recapTimer);
     pendingRecap = null;
-    saveRecords(imported);
+    saveRecords(imported, latestRecords());
     filter = 'all';
     render();
     announce('备份已导入。');
@@ -1222,10 +1222,11 @@ async function installChecklistCloud(){
  const memory=new Map(),migrated=new Set();
  const root=()=> 'daily-checklist.cloud.v1.'+uid+'.';
  function cacheBase(value){
+  loadBase();
   const revision=Number(value.revision);
   if(!Number.isSafeInteger(revision)||revision<0)throw Error('Invalid revision');
   const validated=validateRecords(value.records);
-  if(revision<base.revision)return;
+  if(revision<=base.revision && get(root()+'base'))return;
   base={revision,records:validated};put(root()+'base',JSON.stringify({revision,records:{version:4,...validated}}));
  }
  function loadBase(){
@@ -1250,7 +1251,8 @@ async function installChecklistCloud(){
  }
  function addOperation(patch){
   if(!uid)return;
-  const op={id:crypto.randomUUID(),created:Date.now(),patch},k=root()+'op.'+op.id;
+  const created=Date.now();
+  const op={id:crypto.randomUUID(),created,patch},k=root()+'op.'+op.id;
   if(!put(k,JSON.stringify(op)))memory.set(k,op);
   refreshView();status('待同步 '+queue().length,durable?'修改已暂存在本机，联网后上传。':'浏览器限制本地缓存，请保持页面打开并尽快同步或导出备份。');void sync();
  }

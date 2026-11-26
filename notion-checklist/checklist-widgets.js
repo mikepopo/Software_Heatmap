@@ -1207,7 +1207,15 @@ async function installChecklistCloud(){
  const recoveryText=document.createElement('div'), restoreButton=document.createElement('button'), cloudButton=document.createElement('button');
  restoreButton.type=cloudButton.type='button';restoreButton.className=cloudButton.className='button';
  restoreButton.textContent='恢复并同步旧数据';cloudButton.textContent='仅查看云端';
- recovery.append(recoveryText,restoreButton,cloudButton);bar.after(recovery);
+ const legacyBackup=document.createElement('button');
+ legacyBackup.type='button';legacyBackup.className='button';legacyBackup.textContent='导出本机原始记录';
+ recovery.append(recoveryText,restoreButton,cloudButton,legacyBackup);bar.after(recovery);
+ legacyBackup.addEventListener('click',()=>{
+  const legacy=legacyRecords();
+  if(!legacy){status('无法读取旧记录','请保留浏览器数据并回到原来使用的设备。');return}
+  const url=URL.createObjectURL(new Blob([JSON.stringify({version:4,...legacy},null,2)],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download='daily-checklist-legacy-'+getToday()+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
+ });
  const summary=bar.querySelector('summary'),form=bar.querySelector('form'),controls=bar.querySelector('[data-controls]'),note=bar.querySelector('[data-note]');
  const email=form.querySelector('[type=email]'),password=form.querySelector('[type=password]');
  const status=(title,detail)=>{summary.textContent='云同步 · '+title;if(detail!==undefined)note.textContent=detail};
@@ -1225,7 +1233,7 @@ async function installChecklistCloud(){
  }catch{
   status('连接失败','无法加载云同步组件，旧记录仍保存在本机。联网后刷新页面。');form.style.display='none';return;
  }
- let uid=null,generation=0,busy=false,base={revision:0,records:emptyRecords()},failed=false,localPreview=false;
+ let uid=null,generation=0,busy=false,base={revision:0,records:emptyRecords()},failed=false,localPreview=false,cloudOnly=false;
  const memory=new Map(),migrated=new Set();
  const root=()=> 'daily-checklist.cloud.v1.'+uid+'.';
  function cacheBase(value){
@@ -1258,10 +1266,12 @@ async function installChecklistCloud(){
   const legacy=legacyRecords();
   const count=legacy?Object.values(legacy.days).reduce((n,list)=>n+list.length,0):0;
   const days=legacy?Object.keys(legacy.recaps).length:0;
-  const pending=Boolean(uid&&legacy&&(count||days)&&!get(root()+'migrated')&&!migrated.has(root()+'migrated'));
-  recovery.hidden=!pending;recovery.style.display=pending?'block':'none';
-  restoreButton.hidden=cloudButton.hidden=panel!=='tasks';
-  recoveryText.textContent=pending?(localPreview?'正在显示本机旧记录':'发现尚未迁移的本机记录')+' · '+count+' 项任务 / '+days+' 条复盘。'+(panel==='tasks'?' 点击恢复并同步旧数据。':' 请在任务清单模块恢复。'):'';
+  const pending=Boolean(uid&&legacy&&(count||days)&&!get(root()+'migrated')&&!migrated.has(root()+'migrated')&&!queue().some(op=>op.patch.migrate));
+  const diagnostic=Boolean(uid&&panel==='tasks');
+  recovery.hidden=!(pending||diagnostic);recovery.style.display=pending||diagnostic?'block':'none';
+  restoreButton.hidden=cloudButton.hidden=!pending||panel!=='tasks';
+  legacyBackup.hidden=panel!=='tasks'||!legacy||!(count||days);
+  recoveryText.textContent=pending?(localPreview?'正在显示本机旧记录':'发现尚未迁移的本机记录')+' · '+count+' 项任务 / '+days+' 条复盘。'+(panel==='tasks'?' 点击恢复并同步旧数据。':' 请在任务清单模块恢复。'):diagnostic?(!legacy?'本机旧记录读取失败；请勿清理浏览器缓存。':count||days?'本机原始备份仍保留：'+count+' 项任务 / '+days+' 条复盘。':'当前浏览器存储中未检测到旧任务。请在原来使用的设备及原来的 Notion 页面中检查。'):'';
   return pending;
  }
  function view(){loadBase();return queue().reduce((v,op)=>applyCloudPatch(v,op.patch),base.records)}
@@ -1283,6 +1293,14 @@ async function installChecklistCloud(){
    loadBase();
    const {data,error}=await client.from('checklist_sync_state').select('revision,records').eq('user_id',owner).maybeSingle();
    if(ticket!==generation)return;if(error)throw error;if(data)cacheBase(data);
+   else if(base.revision===0&&!queue().length){
+    // A migration flag is not proof of a successful cloud write.
+    const legacy=legacyRecords();
+    if(legacy&&(Object.values(legacy.days).some(list=>list.length)||Object.keys(legacy.recaps).length)){
+     migrated.delete(root()+'migrated');remove(root()+'migrated');
+     if(!cloudOnly)localPreview=true;
+    }
+   }
    let steps=0;
    while(steps++<40&&ticket===generation){
     const op=queue()[0];if(!op)break;
@@ -1290,7 +1308,10 @@ async function installChecklistCloud(){
     const result=await client.rpc('checklist_sync_commit',{p_operation:op.id,p_revision:base.revision,p_records:{version:4,...candidate}});
     if(ticket!==generation)return;if(result.error)throw result.error;
     cacheBase(result.data);
-    if(result.data.accepted){const k=root()+'op.'+op.id;remove(k);memory.delete(k)}
+    if(result.data.accepted){
+      if(op.patch.migrate){const marker=root()+'migrated';migrated.add(marker);put(marker,'1')}
+      const k=root()+'op.'+op.id;remove(k);memory.delete(k)
+    }
    }
    if(ticket!==generation)return;
    failed=false;refreshView();
@@ -1304,7 +1325,7 @@ async function installChecklistCloud(){
  function activate(session){
   const next=session?.user?.id??null;
   if(uid===next){if(uid)void sync();else status('未登录','电脑和手机请使用同一个账号。未登录时仅保存在本机。');return}
-  flushRecap();generation++;uid=next;base={revision:0,records:emptyRecords()};failed=false;localPreview=false;
+  flushRecap();generation++;uid=next;base={revision:0,records:emptyRecords()};failed=false;localPreview=false;cloudOnly=false;
   form.style.display=uid?'none':'grid';controls.hidden=!uid;bar.querySelector('[data-migrate]').hidden=!uid||panel!=='tasks';
   if(uid){
    loadBase();
@@ -1337,6 +1358,7 @@ async function installChecklistCloud(){
  function migrateLegacy(){
   if(!uid)return;
   const marker=root()+'migrated';
+  if(queue().some(op=>op.patch.migrate)){status('正在恢复','旧记录正在等待上传，请勿清除缓存。');void sync();return}
   if(migrated.has(marker)||get(marker)){status('已迁移过','为避免重复恢复已删除任务，本设备不再自动迁移。如需恢复，请使用数据备份导入。');return}
   let legacy;try{legacy=readCurrentRecords()}catch{status('迁移失败','无法读取旧版记录，请使用原备份导入。');return}
   if(!Object.keys(legacy.days).length&&!Object.keys(legacy.recaps).length){status('没有旧记录','如果记录在其他电脑，请到原设备的 Notion 页面迁移。');return}
@@ -1345,12 +1367,12 @@ async function installChecklistCloud(){
    flushRecap();
    const latestLegacy=legacyRecords()||legacy;
    localPreview=false;
-   addOperation(makeCloudPatch(emptyRecords(),latestLegacy,true));migrated.add(marker);put(marker,'1');showRecovery();refreshView();void sync();
+   addOperation(makeCloudPatch(emptyRecords(),latestLegacy,true));showRecovery();refreshView();void sync();
   });
  }
  bar.querySelector('[data-migrate]').addEventListener('click',migrateLegacy);
  restoreButton.addEventListener('click',migrateLegacy);
- cloudButton.addEventListener('click',()=>{flushRecap();localPreview=false;refreshView();showRecovery();void sync()});
+ cloudButton.addEventListener('click',()=>{flushRecap();cloudOnly=true;localPreview=false;refreshView();showRecovery();void sync()});
  window.addEventListener('storage',e=>{
   if(!uid)return;
   if(e.key===root()+'migrated'&&get(root()+'migrated')){localPreview=false;refreshView();showRecovery();void sync();return}

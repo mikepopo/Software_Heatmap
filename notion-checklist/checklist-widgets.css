@@ -638,3 +638,60 @@ h2, .habit-card h2 { font-size: 19px; }
 @media (max-width: 460px) and (max-height: 360px) {
   [data-embedded] .heat-days { --size: min(8px, calc((100% - 7 * var(--gap)) / 8)); }
 }
+
+/* Adaptive UI 2026-11: panel widths are controlled by Notion embeds, not by the device viewport alone. */
+@media (max-width: 760px) {
+  body { overflow-x: clip; }
+  main.shell { display: grid; grid-template-columns: minmax(0,1fr); width: 100%; padding: 2px 1px 8px; gap: 10px; }
+  main.shell > * { min-width: 0; grid-column: 1 / -1; }
+  .card { padding: clamp(9px,2.4vw,15px); }
+  [data-panel="overview"] main { grid-template-columns: minmax(0,1fr); }
+  [data-panel="overview"] .hero, [data-panel="overview"] .habit-card { grid-column: 1; }
+  .hero { min-height: 145px; padding: 15px; }
+  .hero h1 { font-size: clamp(25px,7.5vw,40px); }
+  .hero-copy { flex: 1 1 auto; }
+  .progress-figure { flex: 0 0 auto; }
+  .hero-landscape { width: 95%; opacity: .67; }
+  .planner-header { display: grid; grid-template-columns: minmax(0,1fr); align-items: start; }
+  .planner-header .date-controls { width: 100%; min-width: 0; display: grid; grid-template-columns: 34px minmax(0,1fr) 34px auto; align-items: center; }
+  .planner-header .date-input { width: 100%; min-width: 0; max-width: none; }
+  .planner-header .date-controls .icon-button { width: 34px; min-height: 40px; }
+  .planner-header .date-controls .button { min-height: 40px; }
+  #planner .compose { grid-template-columns: minmax(0,1fr) 90px; gap: 7px; margin-block: 12px 10px; }
+  #planner .compose input { min-height: 44px; font-size: 16px; }
+  #planner .compose .category-select { min-height: 44px; font-size: 14px; }
+  #planner .compose .primary { grid-column: 1 / -1; min-height: 43px; font-size: 14px; }
+  #planner .toolbar { gap: 9px; align-items: center; }
+  #planner .filter { min-height: 34px; padding-inline: 11px; }
+  #planner .task { min-height: 54px; height: auto; max-height: none; block-size: auto; grid-template-columns: 25px minmax(0,1fr) auto; gap: 7px; padding-block: 6px; }
+  #planner .task-label { min-width: 0; overflow: visible; align-items: flex-start; flex-wrap: wrap; gap: 5px; }
+  #planner .task-title { white-space: normal; display: block; overflow: visible; text-overflow: clip; line-height: 1.5; font-size: 14px; }
+  #planner .task-category { margin-block: 2px; }
+  #planner .checkbox { width: 21px; height: 21px; }
+  #planner .task-actions .icon-button { width: 37px; min-height: 40px; }
+  #planner .tasks { flex: 0 1 auto; block-size: auto; min-block-size: 0; max-block-size: none; max-height: min(58dvh,520px); overflow-y: auto; overscroll-behavior: contain; }
+  #planner .empty { flex: 0 1 auto; min-block-size: 92px; block-size: auto; max-block-size: none; }
+  .recap textarea { font-size: 16px; min-height: 72px; }
+  .heatmap { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
+  .heat-month { min-width: 0; }
+  .trend-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .metric strong { font-size: clamp(17px,5vw,25px); }
+  .forest-content { grid-template-columns: minmax(0,1fr); }
+  .forest-tabs { display: flex; }
+  .forest-content[data-forest-view="orchard"] .forest-guide,
+  .forest-content[data-forest-view="guide"] .forest-land { display: none; }
+  .forest-content[data-forest-view="guide"] .forest-guide { display: block; }
+}
+@media (max-width: 420px) {
+  #planner .compose { grid-template-columns: minmax(0,1fr) 82px; }
+  #planner .toolbar { align-items: stretch; flex-direction: column; }
+  #planner .backup { align-self: flex-start; }
+  #planner .filter { padding-inline: 10px; }
+  .heatmap { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .heat-month { padding: 5px 6px; }
+  .forest-counts { flex-wrap: wrap; }
+}
+@media (pointer: coarse) and (max-width: 760px) {
+  #planner button, #planner input, #planner select, #planner .filter { touch-action: manipulation; }
+  .button, .icon-button { min-height: 40px; }
+}

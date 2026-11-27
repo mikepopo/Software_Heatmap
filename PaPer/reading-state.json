@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 24,
-  "updatedAt": "2026-11-27T02:42:41.907Z",
+  "revision": 25,
+  "updatedAt": "2026-11-27T14:44:45.403Z",
   "legacyReadDates": [],
   "papers": [
     {
@@ -35,7 +35,9 @@
       "pdf": "papers/045b175832e8b236d60a0f7fbeaa09f2df7ba511866320731449cdcc2607833f.pdf",
       "addedAt": "2026-11-27T02:24:17.739Z",
       "stages": [
-        null,
+        {
+          "at": "2026-11-27T14:44:45.403Z"
+        },
         null,
         null,
         null,

@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>论文阅读台</title>
+<style>
+:root{color-scheme:light dark;--ink:#2f3d52;--muted:#667588;--line:#dce4ef;--surface:#fff;--accent:#0f766e;--tint:#edf6f2}
+@media(prefers-color-scheme:dark){:root{--ink:#d8dee9;--muted:#a3afc0;--line:#354255;--surface:#181d25;--accent:#5cc3b6;--tint:#233b34}}
+*{box-sizing:border-box}html,body{margin:0;background:transparent;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}[hidden]{display:none!important}
+.card{padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:0 1px 2px #1f2d3d0a}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}h1{margin:0;font-size:18px;font-weight:800}.actions{display:flex;gap:7px;align-items:center}.small-button{border:1px solid var(--line);border-radius:7px;padding:6px 10px;background:var(--surface);color:var(--ink);font-size:12px}.sync{font-size:12px;color:var(--muted)}
+.workspace{display:grid;grid-template-columns:230px minmax(0,1fr);gap:12px;align-items:stretch}.receiver{display:flex;flex-direction:column;gap:9px;padding:13px;background:var(--tint);border:1px solid var(--line);border-radius:10px}
+.receiver h2{margin:0;font-size:15px;color:var(--accent)}.receiver label{font-size:12px;color:var(--muted)}
+.receiver input[type=text],.receiver select{width:100%;min-width:0;padding:8px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--surface);font-size:12px}
+.drop{display:flex;min-height:130px;flex-direction:column;align-items:center;justify-content:center;gap:9px;border:1.5px dashed #7ca99a;border-radius:9px;background:var(--surface);color:var(--accent);cursor:pointer;text-align:center;padding:12px;font-size:13px}
+.drop.dragging{box-shadow:inset 0 0 0 3px #56a58d55}.drop span:first-child{font-size:29px}.drop small{font-size:11px;color:var(--muted);line-height:1.5}.receiver .repository{font-size:10px;line-height:1.6;color:var(--muted);overflow-wrap:anywhere}
+.bookroom{display:flex;flex-direction:column;gap:10px;min-width:0;min-height:0}.bookroom iframe{display:block;flex:0 0 auto;width:100%;height:250px;border:0;border-radius:10px;background:transparent}
+.reading{display:flex;flex:1;flex-direction:column;justify-content:center;min-width:0;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:linear-gradient(135deg,var(--surface),var(--tint))}
+.reading-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px}.reading-title h2{margin:0;font-size:14px;overflow-wrap:anywhere}.reading-title a{font-size:12px;color:var(--accent);text-underline-offset:3px}
+.stages{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:start;text-align:center}
+.switch{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}.mount{padding:5px;border-radius:50%;background:linear-gradient(145deg,#d7dce0,#78818b);box-shadow:0 2px 3px #15202540,inset 0 1px 1px #fff;display:inline-flex}
+.stage-button{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;width:72px;height:72px;border-radius:50%;border:1px solid #761917;background:radial-gradient(ellipse at 34% 23%,#f97870 0,#d9332c 36%,#a41819 80%);color:#fffaf2;font-size:9px;font-weight:750;line-height:1.35;text-shadow:0 1px 1px #6e1717;padding:7px;box-shadow:inset 0 2px 3px #ffc5b166,inset 0 -3px 4px #630b0c99,0 5px 0 #6e1717,0 7px 7px #17232670;transition:transform .12s,box-shadow .12s,filter .15s}
+.stage-button:enabled:hover{filter:brightness(1.08)}.stage-button:active,.stage-button[aria-pressed=true]{transform:translateY(4px);box-shadow:inset 0 2px 6px #59090b99,inset 0 -1px 2px #ffaca655,0 1px 0 #6e1717,0 2px 3px #17232650}
+.stage-button:disabled:not([aria-pressed=true]){filter:saturate(.55) brightness(.6);cursor:default}.stage-date{font-size:11px;color:var(--muted);min-height:16px}.stage-date.done{color:var(--accent);font-weight:650}
+.note{margin:9px 0 0;color:var(--muted);font-size:12px;line-height:1.6}.status{margin:9px 0 0;font-size:12px;line-height:1.6;color:var(--accent);overflow-wrap:anywhere}.status.error{color:#bd3932}
+dialog{max-width:460px;width:calc(100% - 30px);padding:21px;border:1px solid var(--line);border-radius:13px;background:var(--surface);color:var(--ink);box-shadow:0 18px 70px #0005}dialog::backdrop{background:#142f2d77}dialog h2{margin:0 0 10px;font-size:18px}dialog p{font-size:12px;line-height:1.8;color:var(--muted)}dialog input{width:100%;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}dialog a{color:var(--accent)}.dialog-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:13px}.primary{background:var(--accent);color:var(--surface)}.dialog-error{color:#bd3932}
+@media(max-width:850px){.workspace{grid-template-columns:190px minmax(0,1fr)}.receiver{padding:10px}.stage-button{width:64px;height:64px;font-size:8px;padding:4px}.stages{gap:7px}.mount{padding:5px}}
+@media(max-width:700px){.card{padding:10px}.workspace{grid-template-columns:1fr}.receiver{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.receiver h2,.receiver .repository{grid-column:1/-1}.drop{grid-row:span 3;min-height:125px}.reading{padding:12px 8px}.stages{gap:10px 3px;grid-template-columns:repeat(3,minmax(0,1fr))}.stage-button{width:72px;height:72px;font-size:9px}.note{font-size:11px}}
+
+.stage-button[aria-pressed=true]{border-color:#145334;background:radial-gradient(ellipse at 34% 23%,#82dc9e 0,#2d9b60 40%,#17603f 85%);text-shadow:0 1px 1px #16442d;box-shadow:inset 0 2px 6px #0e422b80,inset 0 -1px 2px #c5ffcf66,0 1px 0 #154d31,0 2px 3px #17232650}
+.mount.done{background:linear-gradient(145deg,#c5d9cd,#6a8f7a)}
+.completion-label{margin-top:3px;font-size:8px;font-weight:800;line-height:1.1;white-space:nowrap}
+.stage-date.done{font-variant-numeric:tabular-nums}
+.celebration-layer{position:fixed;inset:0;z-index:200;overflow:hidden;pointer-events:none}
+.confetti-piece{position:absolute;left:0;top:0;width:6px;height:10px;border-radius:1px;animation:paper-celebration 1.65s var(--delay) cubic-bezier(.17,.65,.45,1) both}
+@keyframes paper-celebration{0%{opacity:0;transform:translate(var(--start-x),var(--start-y)) rotate(0deg)}8%{opacity:1}40%{opacity:1;transform:translate(calc(var(--start-x) + var(--half-drift)),calc(var(--start-y) - var(--lift))) rotate(var(--half-spin))}100%{opacity:0;transform:translate(calc(var(--start-x) + var(--drift)),calc(var(--start-y) + var(--fall))) rotate(var(--spin))}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.filename-note{margin:0;font-size:11px;color:var(--muted);line-height:1.65;overflow-wrap:anywhere}.pause-panel{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;align-items:flex-start;gap:8px}.stop-button{color:#b23f38;border-color:#d7a9a3;background:var(--surface);font-weight:700}.reading-links{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.reading-links button{padding:3px 6px;font-size:10px}.stage-button>span{white-space:nowrap}.stage-button[aria-pressed=true]{cursor:pointer}.stage-button[aria-pressed=true]:hover{filter:brightness(1.1)}.stage-button[aria-pressed=true]:disabled{cursor:wait}dialog textarea{font:inherit;width:100%;margin-top:7px;padding:9px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);resize:vertical;font-size:13px}.stage-button[data-paused=true]{filter:saturate(.35) brightness(.7)}
+@media(max-width:700px){.filename-note{grid-column:2}.pause-panel{grid-column:1/-1;margin-top:0}.receiver label[for=paper-select]{align-self:end}}
+.sticky-note{position:relative;display:flex;flex-direction:column;flex:1;min-height:150px;margin:10px 1px 2px;padding:13px 12px 10px;background:linear-gradient(145deg,#fff4c9,#f8e6a6);border:1px solid #d6be7880;border-radius:3px 3px 12px 3px;box-shadow:1px 3px 6px #67552514;color:#635436;transform:rotate(-.4deg)}
+.sticky-note::before{content:"";position:absolute;top:-7px;left:calc(50% - 24px);width:48px;height:14px;transform:rotate(-4deg);background:#e9d9a5b3;border:1px solid #d8c58d66;pointer-events:none}
+.sticky-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}.sticky-heading h3{font-size:13px;font-weight:750;margin:0}.sticky-heading>span{font-size:19px;opacity:.65}
+.sticky-note textarea{display:block;flex:1;width:100%;min-height:76px;padding:5px 0;border:0;resize:vertical;border-radius:0;background:transparent;color:#51482f;font-family:inherit;line-height:1.8;font-size:12px;outline:none}
+.sticky-note textarea::placeholder{color:#9c8b61}.sticky-note textarea:focus-visible{outline:1px dashed #a98b42;outline-offset:3px}
+.sticky-footer{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:6px}.sticky-footer span{font-size:9px;line-height:1.4;color:#8b7750;flex:1;overflow-wrap:anywhere}
+.sticky-footer button{border:1px solid #c4a65d88;border-radius:5px;background:#fff9e4b3;color:#75602b;padding:4px 7px;font:inherit;font-size:10px;white-space:nowrap}.sticky-footer button:disabled{opacity:.55;cursor:default}
+.note-load{border:0;background:transparent;color:#8d6625;text-align:left;font-size:10px;margin-top:5px;text-decoration:underline;cursor:pointer}
+.book-help{font-size:10px;color:var(--muted);margin:1px 0 3px}.pause-panel{margin-top:0}.trash-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow:auto}.trash-entry{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px;border:1px solid var(--line);border-radius:7px}.trash-entry span{font-size:12px;overflow-wrap:anywhere}.trash-entry small{display:block;color:var(--muted);margin-top:4px;font-size:10px}.trash-entry button{flex:none}
+@media(max-width:700px){.sticky-note{grid-column:1/-1;min-height:160px;margin:8px 1px 3px}.book-help{grid-column:1/-1}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.js" integrity="sha384-A97u3Qnt9GZHURO9YJZRe7VQgGUeFzcv6I1oIGnUTxQrCxnpQMwR0/G8F2zt9abZ" crossorigin="anonymous"></script>
+<script src="Paper_data_cloud.js"></script>
+</head>
+<body>
+<main class="card">
+<div class="top"><h1>📚 论文阅读台</h1><div class="actions"><span id="sync" class="sync">读取中…</span><button class="small-button" type="button" id="show-trash">回收站（0）</button><button class="small-button" type="button" id="refresh">刷新</button><button class="small-button" type="button" id="connect">云端登录</button></div></div>
+<div class="workspace">
+<aside class="receiver">
+<h2>接收待读论文</h2>
+<label class="drop" id="drop" tabindex="0" role="button" aria-label="上传待读论文 PDF"><span aria-hidden="true">＋</span><span>拖入 PDF 或点击上传</span><small>可一次上传多篇</small><input id="files" type="file" accept="application/pdf,.pdf" multiple hidden></label>
+<p class="filename-note">默认使用 PDF 文件名。<br>命名：论文名称_期刊或会议_年份.pdf<br>书脊只显示论文名称。</p>
+<label for="paper-select">当前阅读</label><select id="paper-select" aria-label="选择当前阅读论文"></select>
+<section class="sticky-note" aria-labelledby="desk-note-title"><div class="sticky-heading"><h3 id="desk-note-title">停止阅读原因</h3><span aria-hidden="true">✎</span></div><textarea id="desk-note" aria-label="停止阅读原因内容" maxlength="500" placeholder="例如：今天有实验安排，暂停论文阅读……"></textarea><div class="sticky-footer"><span id="note-save-status" role="status" aria-live="polite">保存后同步到热力图</span><button id="save-note" type="button">保存原因并停止</button></div><button id="load-note" class="note-load" type="button" hidden>载入已保存版本</button></section>
+<p class="book-help">书桌与书架上的书，右键可删除。</p>
+<div class="pause-panel"><button id="stop-reading" class="small-button stop-button" type="button">停止阅读</button><p id="pause-status" class="filename-note">今天读不了时，填写原因后停止。未打卡原因会显示在热力图悬停说明中。</p><button id="resume-reading" class="small-button" type="button" hidden>继续阅读</button></div>
+</aside>
+<div class="bookroom"><iframe id="shelf" src="Paper_shelf_cloud.html?v=cloud-v1" title="论文书桌与书架"></iframe>
+<section class="reading" aria-label="五阶段论文阅读">
+<div class="reading-title"><h2 id="paper-title">正在读取论文…</h2><div class="reading-links"><button id="read-again" class="small-button" type="button" hidden>放回书桌重读</button><a id="open-pdf" target="_blank" rel="noopener" hidden>打开 PDF</a></div></div>
+<div class="stages" id="stages"></div>
+<p class="note" id="note">按阅读顺序确认完成阶段，当天会自动记录一次阅读打卡。</p>
+</section>
+</div>
+</div>
+<p class="status" id="status" role="status" aria-live="polite"></p>
+</main>
+<dialog id="trash-dialog" aria-labelledby="trash-title"><h2 id="trash-title">回收站</h2><p>删除时会同步移除 GitHub 当前分支的 PDF 和阅读记录。这里可同时恢复 PDF、阅读阶段和上架状态。</p><div id="trash-list" class="trash-list"></div><p id="trash-error" class="dialog-error" role="alert"></p><div class="dialog-actions"><button class="small-button stop-button" id="clear-trash" type="button">清空回收站</button><button class="small-button" id="trash-close" type="button">关闭</button></div></dialog>
+<dialog id="clear-trash-dialog" aria-labelledby="clear-trash-title"><h2 id="clear-trash-title">清空回收站</h2><p id="clear-trash-description"></p><p>清空后不能从此页面恢复 PDF 和阅读记录。Git 提交历史仍保留。</p><p id="clear-trash-error" class="dialog-error" role="alert"></p><div class="dialog-actions"><button id="clear-trash-cancel" class="small-button" type="button">取消</button><button id="clear-trash-confirm" class="small-button stop-button" type="button">确认清空</button></div></dialog>
+<dialog id="undo-dialog" aria-labelledby="undo-title"><h2 id="undo-title">撤回阅读阶段</h2><p id="undo-description"></p><p id="undo-error" class="dialog-error" role="alert"></p><div class="dialog-actions"><button id="undo-cancel" class="small-button" type="button">取消</button><button id="undo-confirm" class="small-button primary" type="button">确认撤回</button></div></dialog>
+<dialog id="connection" aria-labelledby="connection-title">
+<h2 id="connection-title">登录云端阅读台</h2>
+<p>使用 To do List 中已注册的 Supabase 邮箱与密码。GitHub 写入凭证由服务端保护，不需要在此填写。登录状态保存在本机。</p>
+<label for="cloud-email">邮箱</label><input id="cloud-email" type="email" autocomplete="email" placeholder="已有云同步账号邮箱">
+<label for="github-token">密码</label><input id="github-token" type="password" autocomplete="current-password" placeholder="云同步账号密码">
+<p id="connection-error" class="dialog-error" role="alert"></p>
+<div class="dialog-actions"><button class="small-button" id="disconnect" type="button">退出登录</button><button class="small-button" id="cancel" type="button">取消</button><button class="small-button primary" id="save-token" type="button">连接</button></div>
+</dialog>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+let state = null;
+let selected = null;
+let busy = false;
+let waitingFiles = [];
+let pendingUndo = null;
+let noteDirty = false;
+let noteBaseAt = "";
+const labels = [
+  ["Abstract", "Introduction", "Related Work"],
+  ["Method1"], ["Method2"], ["Experiment", "Conclusion"], ["总结"]
+];
+function message(text, error = false) { $("status").textContent = text; $("status").className = "status" + (error ? " error" : ""); }
+function render() {
+  $("connect").textContent = PaperData.token() ? "云端已连接" : "云端登录";
+  $("sync").textContent = state ? (PaperData.token() ? "已同步 GitHub" : "只读 · 待连接云端") : "读取中…";
+  $("files").disabled = busy;
+  $("refresh").disabled = busy;
+  $("paper-select").disabled = busy;
+  $("stop-reading").disabled = busy || !state;
+  $("show-trash").disabled = busy || !state;
+  $("save-note").disabled = busy || !state || !noteDirty;
+  $("desk-note").disabled = busy;
+  if (state) renderNoteAndTrash();
+  if (!state) return;
+  const paused = PaperData.pauseFor(state);
+  $("stop-reading").textContent = paused ? "修改停止原因" : "停止阅读";
+  $("stop-reading").disabled = busy;
+  $("resume-reading").hidden = !paused;
+  $("resume-reading").disabled = busy;
+  $("pause-status").textContent = paused ? "今日已停止：" + paused.reason : "今天读不了时，填写原因后停止。未打卡原因会显示在热力图悬停说明中。";
+  if (!state.papers.some(paper => paper.id === selected)) selected = state.papers.find(paper => !PaperData.isComplete(paper))?.id || state.papers[0]?.id || null;
+  $("paper-select").replaceChildren(...state.papers.map(paper => {
+    const option = document.createElement("option");
+    option.value = paper.id;
+    option.textContent = (PaperData.isComplete(paper) ? "已读 · " : "") + paper.title;
+    return option;
+  }));
+  if (selected) $("paper-select").value = selected;
+  const paper = state.papers.find(item => item.id === selected);
+  $("paper-title").textContent = paper?.title || "上传一篇论文，开始阅读";
+  $("read-again").hidden = !paper || !PaperData.isComplete(paper);
+  $("read-again").disabled = busy;
+  const pdf = paper ? PaperData.pending(state).concat(PaperData.completed(state)).find(item => item.id === paper.id)?.pdf : "";
+  $("open-pdf").hidden = !pdf;
+  if (pdf) $("open-pdf").href = pdf;
+  const next = paper?.stages.findIndex(stage => !stage);
+  $("stages").replaceChildren(...labels.map((lines, index) => {
+    const wrapper = document.createElement("div"); wrapper.className = "switch";
+    const mount = document.createElement("div"); mount.className = "mount";
+    const button = document.createElement("button"); button.type = "button"; button.className = "stage-button";
+    const done = Boolean(paper && (paper.completedDate || paper.stages[index]));
+    mount.classList.toggle("done", done);
+    button.setAttribute("aria-pressed", String(done));
+    button.setAttribute("aria-label", lines.join("、") + (done ? "，已完成" : ""));
+    button.disabled = busy || !paper || (!done && (Boolean(paused) || index !== next));
+    button.dataset.paused = String(Boolean(paused));
+    button.title = done ? "再次点击可撤回此阶段；后续阶段也会撤回" : paused ? "今天已停止阅读，请先继续阅读" : lines.join(" · ");
+    for (const line of lines) { const span = document.createElement("span"); span.textContent = line; button.append(span); }
+    if (done) { const completed = document.createElement("span"); completed.className = "completion-label"; completed.textContent = "✓ 已完成"; button.append(completed); }
+    button.addEventListener("click", () => markStage(index));
+    const date = document.createElement("span"); date.className = "stage-date" + (done ? " done" : "");
+    date.textContent = paper?.stages[index] ? PaperData.day(paper.stages[index].at).slice(5) : done ? "已完成" : index === next ? "当前阶段" : "待完成";
+    mount.append(button); wrapper.append(mount, date); return wrapper;
+  }));
+  $("note").textContent = paper && PaperData.isComplete(paper)
+    ? "已读完并放上书架。再次点击绿色按钮可撤回，也可放回书桌重读。"
+    : paused ? "今天已停止阅读；点击继续阅读后可确认新阶段。绿色按钮仍可撤回。"
+    : "按顺序完成五阶段；绿色按钮再次点击可撤回该阶段及后续阶段。";
+}
+async function refresh() {
+  if (busy) return;
+  try { state = await PaperData.load({notify:true}); render(); reloadShelf(); message("已同步最新记录与书桌书架。"); } catch (error) { message(error.message, true); }
+}
+function celebrate(index) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const button = $("stages").querySelectorAll(".stage-button")[index];
+  if (!button) return;
+  const bounds = button.getBoundingClientRect();
+  const layer = document.createElement("div");
+  layer.className = "celebration-layer";
+  layer.setAttribute("aria-hidden", "true");
+  const colors = ["#e4b752", "#69bf94", "#ef8c93", "#78b9d4", "#c6a2db", "#f5d978"];
+  for (let i = 0; i < 44; i++) {
+    const piece = document.createElement("i");
+    piece.className = "confetti-piece";
+    piece.style.background = colors[i % colors.length];
+    piece.style.setProperty("--start-x", bounds.left + bounds.width / 2 + "px");
+    piece.style.setProperty("--start-y", bounds.top + bounds.height / 3 + "px");
+    const drift = (Math.random() - .5) * 350;
+    piece.style.setProperty("--drift", drift + "px");
+    piece.style.setProperty("--half-drift", drift * .55 + "px");
+    piece.style.setProperty("--lift", 65 + Math.random() * 80 + "px");
+    piece.style.setProperty("--fall", 100 + Math.random() * 120 + "px");
+    piece.style.setProperty("--half-spin", (Math.random() - .5) * 380 + "deg");
+    piece.style.setProperty("--spin", (Math.random() - .5) * 1000 + "deg");
+    piece.style.setProperty("--delay", Math.random() * .12 + "s");
+    layer.append(piece);
+  }
+  document.body.append(layer);
+  setTimeout(() => layer.remove(), 1900);
+}
+async function markStage(index) {
+  if (!state || busy) return;
+  if (!PaperData.token()) { $("connection").showModal(); return; }
+  const paper = state.papers.find(item => item.id === selected);
+  if (!paper) return;
+  if (paper.completedDate || paper.stages[index]) { askUndo(paper, index); return; }
+  if (PaperData.pauseFor(state) || index !== paper.stages.findIndex(stage => !stage)) return;
+  let confirmed = false;
+  busy = true; render(); message("正在同步阅读进度…");
+  try {
+    state = await PaperData.commitOperation({ type: "stage", paperId: paper.id, index, at: new Date().toISOString() });
+    confirmed = Boolean(state.papers.find(item => item.id === paper.id)?.stages[index]);
+    message(index === 4 ? "已完成整篇阅读，论文已上架，并更新今日打卡。" : "已确认该阶段，今日阅读已记录。");
+  } catch (error) { message(error.message, true); }
+  finally { busy = false; render(); }
+  if (confirmed) { reloadShelf(); celebrate(index); }
+}
+async function uploadFiles(files) {
+  if (busy || !files.length) return;
+  if (!PaperData.token()) { waitingFiles = [...files]; $("connection").showModal(); return; }
+  busy = true; render();
+  try {
+    for (const [index, file] of [...files].entries()) {
+      message("上传 PDF " + (index + 1) + " / " + files.length + "…");
+      state = await PaperData.upload(file);
+      if (PaperData.lastUploadedId) selected = PaperData.lastUploadedId;
+    }
+    $("files").value = "";
+    reloadShelf();
+    const uploaded = state.papers.find(paper => paper.id === selected);
+    message(uploaded && PaperData.isComplete(uploaded) ? "这份 PDF 已在仓库中，且五个阶段均已完成，所以在书架上。可点击绿色按钮撤回，或放回书桌重读。" : "PDF 和待读记录已同步到 GitHub，书桌已更新。");
+  } catch (error) { message(error.message, true); }
+  finally { busy = false; render(); }
+}
+function renderNoteAndTrash() {
+  const pause = PaperData.pauseFor(state);
+  if (!noteDirty) $("desk-note").value = pause?.reason || "";
+  $("load-note").hidden = true;
+  $("note-save-status").textContent = noteDirty ? "原因尚未保存" : pause ? "已停止 · 原因已同步热力图" : "填写原因后保存，热力图悬停可查看";
+  $("show-trash").textContent = "回收站（" + (state.deletedPapers?.length || 0) + "）";
+  if ($("trash-dialog").open) renderTrash();
+}
+$("desk-note").addEventListener("input",()=>{
+  noteDirty = $("desk-note").value !== (PaperData.pauseFor(state)?.reason || "");
+  $("save-note").disabled = busy || !state || !noteDirty;
+  $("note-save-status").textContent = noteDirty ? "原因尚未保存" : "原因已同步热力图";
+});
+async function saveStopReason() {
+  if(busy || !state)return;
+  if(!PaperData.token()){$("connection").showModal();return;}
+  const reason=$("desk-note").value.trim();
+  if(!reason){message("请在便签中填写停止阅读的原因。",true);$("desk-note").focus();return;}
+  busy=true;render();
+  try {state=await PaperData.commitOperation({type:"pause",reason,at:new Date().toISOString()});noteDirty=false;message("已停止今天的阅读，原因已同步到热力图的悬停说明。");}
+  catch(error){message(error.message,true);}
+  finally{busy=false;render();}
+}
+$("save-note").addEventListener("click",saveStopReason);
+$("load-note").addEventListener("click",()=>{});
+function renderTrash() {
+  const entries = state?.deletedPapers || [];
+  $("clear-trash").disabled = busy || !entries.length;
+  const rows = entries.map(entry=>{
+    const row=document.createElement("div");row.className="trash-entry";
+    const text=document.createElement("span");text.textContent=entry.paper.title;
+    const date=document.createElement("small");date.textContent=PaperData.day(entry.deletedAt)+" 删除";text.append(date);
+    const button=document.createElement("button");button.className="small-button";button.type="button";button.textContent="恢复";button.disabled=busy;
+    button.addEventListener("click",()=>restorePaper(entry));
+    row.append(text,button);return row;
+  });
+  if(!rows.length){const empty=document.createElement("p");empty.textContent="回收站是空的。";rows.push(empty);}
+  $("trash-list").replaceChildren(...rows);
+}
+async function restorePaper(entry) {
+  if(busy)return;
+  if(!PaperData.token()){$("trash-dialog").close();$("connection").showModal();return;}
+  busy=true;render();$("trash-error").textContent="";
+  try {state=await PaperData.commitOperation({type:"restore",paperId:entry.paper.id,expectedDeletedAt:entry.deletedAt,at:new Date().toISOString()});selected=entry.paper.id;reloadShelf();message("论文 PDF 和阅读记录已恢复到 GitHub。");}
+  catch(error){$("trash-error").textContent=error.message;}
+  finally{busy=false;render();}
+}
+$("show-trash").addEventListener("click",()=>{renderTrash();$("trash-error").textContent="";$("trash-dialog").showModal();});
+$("trash-close").addEventListener("click",()=>$("trash-dialog").close());
+
+let trashToClear = [];
+$("clear-trash").addEventListener("click",()=>{
+  trashToClear=(state?.deletedPapers || []).map(entry=>({id:entry.paper.id,deletedAt:entry.deletedAt}));
+  if(!trashToClear.length)return;
+  $("trash-dialog").close();$("clear-trash-error").textContent="";
+  $("clear-trash-description").textContent="将清空 "+trashToClear.length+" 篇论文的恢复记录。";
+  $("clear-trash-dialog").showModal();
+});
+$("clear-trash-cancel").addEventListener("click",()=>{$("clear-trash-dialog").close();renderTrash();$("trash-dialog").showModal();});
+$("clear-trash-confirm").addEventListener("click",async()=>{
+  if(busy)return;
+  if(!PaperData.token()){$("clear-trash-dialog").close();$("connection").showModal();return;}
+  busy=true;render();$("clear-trash-confirm").disabled=true;$("clear-trash-cancel").disabled=true;
+  try{state=await PaperData.commitOperation({type:"clear-trash",entries:trashToClear,at:new Date().toISOString()});$("clear-trash-dialog").close();message("回收站已清空，并同步到 GitHub。");}
+  catch(error){$("clear-trash-error").textContent=error.message;}
+  finally{busy=false;render();$("clear-trash-confirm").disabled=false;$("clear-trash-cancel").disabled=false;}
+});
+$("clear-trash-dialog").addEventListener("cancel",event=>{if(busy)event.preventDefault();});
+function reloadShelf() { $("shelf").src = "Paper_shelf_cloud.html?v=cloud-v1&revision=" + (state?.revision ?? 0) + "&refresh=" + Date.now(); }
+function askUndo(paper, index) {
+  pendingUndo = {type:"undo",paperId:paper.id,index,expectedStages:JSON.stringify(paper.stages)};
+  $("undo-error").textContent = "";
+  $("undo-description").textContent = "撤回“" + labels[index].join(" / ") + "”及其后续阶段。已上架的论文会回到书桌；热力图会按剩余的真实阅读记录重新计算。";
+  $("undo-dialog").showModal();
+}
+$("undo-cancel").addEventListener("click",()=>{$("undo-dialog").close();pendingUndo=null;});
+$("undo-confirm").addEventListener("click",async()=>{
+  if (!pendingUndo || busy) return;
+  if (!PaperData.token()) { $("undo-dialog").close();$("connection").showModal();return; }
+  busy=true;render();$("undo-confirm").disabled=true;
+  try { state=await PaperData.commitOperation({...pendingUndo,at:new Date().toISOString()});$("undo-dialog").close();pendingUndo=null;reloadShelf();message("已撤回，论文已回到书桌；热力图已重新计算。"); }
+  catch(error){$("undo-error").textContent=error.message;}
+  finally{busy=false;render();$("undo-confirm").disabled=false;}
+});
+$("read-again").addEventListener("click",()=>{const paper=state?.papers.find(p=>p.id===selected);if(paper)askUndo(paper,0);});
+$("stop-reading").addEventListener("click",saveStopReason);
+$("resume-reading").addEventListener("click",async()=>{
+  if(busy)return;
+  if(!PaperData.token()){$("connection").showModal();return;}
+  busy=true;render();
+  try{state=await PaperData.commitOperation({type:"resume",at:new Date().toISOString()});message("已继续阅读，原暂停说明保留在热力图中。");}
+  catch(error){message(error.message,true);}
+  finally{busy=false;render();}
+});
+
+$("files").addEventListener("change", event => uploadFiles([...event.target.files]));
+$("drop").addEventListener("keydown", event => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); $("files").click(); } });
+$("drop").addEventListener("dragover", event => { event.preventDefault(); $("drop").classList.add("dragging"); });
+$("drop").addEventListener("dragleave", () => $("drop").classList.remove("dragging"));
+$("drop").addEventListener("drop", event => { event.preventDefault(); $("drop").classList.remove("dragging"); uploadFiles([...event.dataTransfer.files]); });
+$("paper-select").addEventListener("change", event => { selected = event.target.value; render(); });
+$("refresh").addEventListener("click", refresh);
+$("connect").addEventListener("click", () => { $("connection-error").textContent = PaperData.authError || ""; $("connection").showModal(); });
+$("cancel").addEventListener("click", () => { waitingFiles = []; $("connection").close(); });
+$("disconnect").addEventListener("click", async () => { try { await PaperData.disconnect(); $("github-token").value = ""; $("connection").close(); render(); reloadShelf(); } catch(e) { $("connection-error").textContent=e.message; } });
+$("save-token").addEventListener("click", async () => {
+  $("save-token").disabled = true;
+  try {
+    state = await PaperData.connect($("cloud-email").value,$("github-token").value);
+    $("github-token").value = ""; $("connection").close(); render();
+    reloadShelf(); message("云端已连接，GitHub 凭证保留在服务端。");
+    const files = waitingFiles; waitingFiles = [];
+    if (files.length) await uploadFiles(files);
+  } catch (error) { $("connection-error").textContent = error.message; }
+  finally { $("save-token").disabled = false; }
+});
+let shelfObserver;
+function fitShelf() {
+  shelfObserver?.disconnect();
+  const frame = $("shelf");
+  const card = frame.contentDocument?.querySelector("main.card");
+  if (!card) return;
+  const update = () => {
+    const height = Math.max(180, Math.ceil(card.getBoundingClientRect().height) + 2);
+    if (frame.style.height !== height + "px") frame.style.height = height + "px";
+  };
+  update();
+  shelfObserver = new ResizeObserver(update);
+  shelfObserver.observe(card);
+}
+$("shelf").addEventListener("load", fitShelf);
+fitShelf();
+PaperData.watch(next => { state = next; render(); });
+render(); refresh();
+</script>
+</body>
+</html>

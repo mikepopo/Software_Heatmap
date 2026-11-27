@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 28,
-  "updatedAt": "2026-11-27T14:45:12.475Z",
+  "revision": 29,
+  "updatedAt": "2026-11-27T14:45:19.587Z",
   "legacyReadDates": [],
   "papers": [
     {
@@ -47,7 +47,9 @@
         {
           "at": "2026-11-27T14:45:12.475Z"
         },
-        null
+        {
+          "at": "2026-11-27T14:45:19.587Z"
+        }
       ]
     }
   ],

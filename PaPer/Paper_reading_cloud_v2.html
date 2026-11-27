@@ -324,7 +324,7 @@ $("clear-trash-confirm").addEventListener("click",async()=>{
   finally{busy=false;render();$("clear-trash-confirm").disabled=false;$("clear-trash-cancel").disabled=false;}
 });
 $("clear-trash-dialog").addEventListener("cancel",event=>{if(busy)event.preventDefault();});
-function reloadShelf() { $("shelf").src = "Paper_shelf_cloud_v2.html&revision=" + (state?.revision ?? 0) + "&refresh=" + Date.now(); }
+function reloadShelf() { const url = new URL("Paper_shelf_cloud_v2.html", location.href); url.searchParams.set("revision", String(state?.revision ?? 0)); url.searchParams.set("refresh", String(Date.now())); $("shelf").src = url.href; }
 function askUndo(paper, index) {
   pendingUndo = {type:"undo",paperId:paper.id,index,expectedStages:JSON.stringify(paper.stages)};
   $("undo-error").textContent = "";

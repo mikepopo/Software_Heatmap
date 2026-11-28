@@ -233,7 +233,13 @@ const PAPERS = [
 ];
 /* ================= 打算读、还没读完的论文放在 TO_READ（摆在书桌上） =================
    读完后把那一行从 TO_READ 剪切到 PAPERS 末尾并补上 date，下次打开时它会从书桌飞上书架 */
-const TO_READ = [];
+const TO_READ = [
+  {
+    "title": "LLT_ECCV_2022",
+    "pdf": "papers/919f03a93e9ff39b53e7dd134df820760c134647b5dcb7a543ac416fc97ce1cf.pdf",
+    "date": "2026-11-28"
+  }
+];
 /* ===================================================================== */
 (async () => {
 const sharedState = await PaperData.load();

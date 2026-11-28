@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 29,
-  "updatedAt": "2026-11-27T14:45:19.587Z",
+  "revision": 30,
+  "updatedAt": "2026-11-28T07:59:22.092Z",
   "legacyReadDates": [],
   "papers": [
     {
@@ -50,6 +50,20 @@
         {
           "at": "2026-11-27T14:45:19.587Z"
         }
+      ]
+    },
+    {
+      "id": "paper-919f03a93e9ff39b53e7dd134df820760c134647b5dcb7a543ac416fc97ce1cf",
+      "title": "LLT_ECCV_2022",
+      "originalFileName": "LLT_ECCV_2022.pdf",
+      "pdf": "papers/919f03a93e9ff39b53e7dd134df820760c134647b5dcb7a543ac416fc97ce1cf.pdf",
+      "addedAt": "2026-11-28T07:59:22.092Z",
+      "stages": [
+        null,
+        null,
+        null,
+        null,
+        null
       ]
     }
   ],
